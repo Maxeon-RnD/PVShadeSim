@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pvshadesim"
+version = "0.0.1"
+authors = [
+  { name="Kiran Balasubramanian", email="kiran.balasubramanian@maxeon.com" },
+]
+maintainers = [
+  {name = "Kiran Balasubramanian", email = "kiran.balasubramanian@maxeon.com"},
+]
+description = "A physical and electrical shade model using Shapely and PVMismatch."
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "numpy",
+  "pandas",
+  "v_PVMismatch",
+  "shapely",
+  "matplotlib",
+  "seaborn",
+  "dataframe_image",
+]
+keywords = ["pvmismatch", "PV", "shading", "mismatch", "IV", "shapely"]
+
+[project.urls]
+Homepage = "https://github.com/Maxeon-RnD/pvshadesim"
+Issues = "https://github.com/Maxeon-RnD/pvshadesim/issues"

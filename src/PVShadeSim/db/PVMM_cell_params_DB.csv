@@ -1,0 +1,3 @@
+﻿uniqueName,paramsID,tech,Rs,Rsh,Isat1_T0,Isat2_T0,Isc0_T0,aRBD,bRBD,VRBD,nRBD,Eg,alpha_Isc,cellArea,cell_length,cell_width,comment_source,comment_2,comment_3,comment_4,isPreferred
+default_half_cell_v1,9901,default_half_cell,0.00777,14.38,6.78E-12,4.39E-07,5.535,0.001960455,-0.029406819,-19.11443209,3.428536951,1.166,0.0004,137.08,166,83,,,,,yes
+default_full_cell_v1,9902,default_full_cell,0.003173,7.132968,2.39E-11,1.72E-06,10.12,0.001949693,-0.029245399,-19.00950964,3.409717115,1.166,0.00048,252.015625,158.75,158.75,,,,,yes
