@@ -30,5 +30,5 @@ dependencies = [
 keywords = ["pvmismatch", "PV", "shading", "mismatch", "IV", "shapely"]
 
 [project.urls]
-Homepage = "https://github.com/Maxeon-RnD/pvshadesim"
-Issues = "https://github.com/Maxeon-RnD/pvshadesim/issues"
+Homepage = "https://github.com/Maxeon-RnD/PVShadeSim"
+Issues = "https://github.com/Maxeon-RnD/PVShadeSim/issues"
