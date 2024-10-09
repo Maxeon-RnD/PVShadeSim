@@ -1,7 +1,7 @@
 # PVShadeSim
  A physical and electrical shade model using Shapely and PVMismatch.
 
-![image](https://github.com/user-attachments/assets/e0e2bb74-165b-4ba9-88ae-3c1cc8e3a127)
+![image](https://github.com/user-attachments/assets/979498f7-2e68-4a2d-9560-a97d184d83e6)
 
 ## Install & Setup
 In a fresh Python virtual environment, simply run:
