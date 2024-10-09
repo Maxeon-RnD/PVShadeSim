@@ -7,14 +7,14 @@
 In a fresh Python virtual environment, simply run:
 
 ```bash
-$ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple PVShadeSim
+$ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pvshadesim
 ```
 
 ### Install using .whl file (Recommended)
 Download files from Github and run the latest version of the .whl file using the command below from the parent folder.
 
 ```bash
-$ pip install .\dist\PVShadeSim-<version>-py3-none-any.whl
+$ pip install .\dist\pvshadesim-<version>-py3-none-any.whl
 ```
 
 ## Requirements
