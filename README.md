@@ -19,7 +19,7 @@ $ pip install .\dist\pvshadesim-<version>-py3-none-any.whl
 
 ## Requirements
 
-PVShadeSim requires Matplotlib, Seaborn, NumPy, Pandas, v_PVMismatch, Shapely and Dataframe_image.
+PVShadeSim requires Matplotlib, Seaborn, Plotly, NumPy, Pandas, v_PVMismatch, Shapely and Dataframe_image.
 
 ## Current Maintainer at Maxeon Solar
 
