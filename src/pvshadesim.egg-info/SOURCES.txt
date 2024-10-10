@@ -9,6 +9,14 @@ src/PVShadeSim/pvshade.py
 src/PVShadeSim/pvsim.py
 src/PVShadeSim/utils.py
 src/PVShadeSim/version.py
+src/PVShadeSim/data/Plastic_Fern_2p0.pickle
+src/PVShadeSim/data/Updated_Plastic_Fern.pickle
+src/PVShadeSim/db/PVMM_cell_params_DB.csv
+src/PVShadeSim/db/PVMM_mod_params_DB.csv
+src/PVShadeSim/db/PVMM_shade_params_DB.csv
+src/PVShadeSim/db/Sim_Config.csv
+src/PVShadeSim/db/User_cell_index_maps.xlsx
+src/PVShadeSim/db/User_cell_pos.xlsx
 src/PVShadeSim/db/__init__.py
 src/PVShadeSim/db/database.py
 src/pvshadesim.egg-info/PKG-INFO

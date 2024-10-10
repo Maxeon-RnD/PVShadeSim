@@ -4,4 +4,5 @@ v_PVMismatch
 shapely
 matplotlib
 seaborn
+plotly
 dataframe_image

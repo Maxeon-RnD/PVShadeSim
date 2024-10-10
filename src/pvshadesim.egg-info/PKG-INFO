@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: pvshadesim
-Version: 0.0.1
+Version: 0.0.3
 Summary: A physical and electrical shade model using Shapely and PVMismatch.
 Author-email: Kiran Balasubramanian <kiran.balasubramanian@maxeon.com>
 Maintainer-email: Kiran Balasubramanian <kiran.balasubramanian@maxeon.com>
@@ -18,30 +18,31 @@ Requires-Dist: v_PVMismatch
 Requires-Dist: shapely
 Requires-Dist: matplotlib
 Requires-Dist: seaborn
+Requires-Dist: plotly
 Requires-Dist: dataframe_image
 
 # PVShadeSim
  A physical and electrical shade model using Shapely and PVMismatch.
 
-![image](https://github.com/user-attachments/assets/e0e2bb74-165b-4ba9-88ae-3c1cc8e3a127)
+![image](https://github.com/user-attachments/assets/979498f7-2e68-4a2d-9560-a97d184d83e6)
 
 ## Install & Setup
 In a fresh Python virtual environment, simply run:
 
 ```bash
-$ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple PVShadeSim
+$ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pvshadesim
 ```
 
 ### Install using .whl file (Recommended)
 Download files from Github and run the latest version of the .whl file using the command below from the parent folder.
 
 ```bash
-$ pip install .\dist\PVShadeSim-<version>-py3-none-any.whl
+$ pip install .\dist\pvshadesim-<version>-py3-none-any.whl
 ```
 
 ## Requirements
 
-PVShadeSim requires Matplotlib, Seaborn, NumPy, Pandas, v_PVMismatch, Shapely and Dataframe_image.
+PVShadeSim requires Matplotlib, Seaborn, Plotly, NumPy, Pandas, v_PVMismatch, Shapely and Dataframe_image.
 
 ## Current Maintainer at Maxeon Solar
 
