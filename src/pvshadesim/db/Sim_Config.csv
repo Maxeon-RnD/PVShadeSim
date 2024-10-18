@@ -1,0 +1,4 @@
+﻿plot_label,Module,Cell,is_Landscape,Shade_Definition,Str_Length,Num_Str,Num_Mods_Shade,is_AC_Mod,Mod_Space_X,Mod_Space_Y,Mod_Edge_X,Mod_Edge_Y,Tilt,Azimuth,str_tilt,num_str_tracker,Market
+default_full_series,default_full_series,Default,FALSE,Standard,1,1,[1],TRUE,0,100,0,0,30,180,FALSE,1,RES
+default_half_TB,default_half_TB,default_half_cell_v1,FALSE,Standard,5,1,[1],FALSE,0,100,0,0,30,180,FALSE,1,RES
+default_half_user,default_half_user,default_half_cell_v1,TRUE,Standard,1,1,[1],FALSE,0,100,0,0,30,180,FALSE,1,RES

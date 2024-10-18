@@ -1,0 +1,18 @@
+﻿uniqueName,paramsID,scenario_definition,scenario_type,shade_cell_prop,shade_cell_idx,num_obj,x_len,y_len,rot_ang,use_std,pickle_file,rowcol_type,shade_mod_prop,shade_type,cen_pt,translucence,dir_diff_ratio,comment_source,comment_2,comment_3,comment_4,isPreferred
+one_cell,,Standard,1 Cell,"[0.2,1,0.05]",[],[],[],[],[],TRUE,[],[],[],1cell,[],1,0.9999,Kiran prelim,9/29/2022: Initial version,,,yes
+2_cells,,Standard,N Cells,[],[],2,[],[],[],TRUE,[],[],[],ncells,[],1,0.95,Kiran prelim,9/29/2022: Initial version,,,yes
+3_cells,,Standard,N Cells,[],[],3,[],[],[],TRUE,[],[],[],ncells,[],1,0.95,Kiran prelim,9/29/2022: Initial version,,,yes
+4_cells,,Standard,N Cells,[],[],4,[],[],[],TRUE,[],[],[],ncells,[],1,0.95,Kiran prelim,9/29/2022: Initial version,,,yes
+substring,,Nonstandard,Substring_per_diode,[],"[[1, 0]]",[],[],[],[],FALSE,[],[],"[1,100,0.5]",substring,[],1,1,Kiran prelim,9/29/2022: Initial version,,,yes
+leaves_bird_droppings,,Standard,Leaves Bird droppings,[],[],5,"[5, 120]","[5, 120]","[-90, 90]",TRUE,Leaves_BirdDroppings_Data_red.pickle,[],[],leaves_birddroppings,[],1,0.95,Kiran prelim,9/29/2022: Initial version,,,yes
+row,,Standard,Shade Row,[],[],[],[],[],[],TRUE,[],mod_prop,"[10,80,10]",row,[],1,0.8,Kiran prelim,9/29/2022: Initial version,,,yes
+col,,Standard,Shade Column,[],[],[],[],[],[],TRUE,[],mod_prop,"[10,80,10]",col,[],1,0.8,Kiran prelim,9/29/2022: Initial version,,,yes
+rect_bott_soil,,Standard,Rectangular Bottom Edge Soiling,[],[],[],[],[],[],TRUE,[],mod_prop,"[1,20,1]",bottom_edge_soiling_row,[],1,0.8,Kiran prelim,9/29/2022: Initial version,,,yes
+rect_long_bott_soil,,Standard,Rectangular Bottom Long Edge Soiling,[],[],[],[],[],[],TRUE,[],mod_prop,"[1,20,1]",bottom_edge_soiling_col,[],1,0.8,Kiran prelim,10/19/2022: Initial version,,,yes
+wire_pole,,Standard,Wire Pole Shade,[],[],[],[],"[25,115,35]","[10,81,5]",TRUE,Wire_Pole_Data.pickle,[],[],Wire Pole,middle,1,0.8,Kiran prelim,9/29/2022: Initial version,,,yes
+chimney,,Standard,Chimney Shade,[],[],[],[],"[1016,1320,100]","[10,81,5]",TRUE,BR_Chimney_Data.pickle,[],[],Chimney,BR,1,0.8,Kiran prelim,9/29/2022: Initial version,,,yes
+vent_pipe,,Standard,Chimney Shade,[],[],[],[],"[25,115,35]","[15,46,15]",TRUE,L1by4_Pipe_Data.pickle,[],[],Pipe,L1by4,1,0.8,Kiran prelim,9/29/2022: Initial version,,,yes
+mixed1,,Standard,Mixed Case 1,[],[],[],[],[],[],[],[],[],[],mixed1,[],1,0.8,Kiran prelim,9/29/2022: Initial version,,,yes
+mixed2,,Standard,Mixed Case 2,[],[],[],[],[],[],[],[],[],[],mixed2,[],1,0.8,Kiran prelim,9/29/2022: Initial version,,,yes
+tree1,,Standard,Tree Case 1,[],[],[],[],[],[],[],[],[],[],tree1,[],1,0.7,Kiran prelim,9/29/2022: Initial version,,,yes
+plastic_fern,,Standard,Plastic fern,[],[],[],[],[],[45],[],[],[],[],tree2,['BR'],1,0.8,Kiran prelim,9/29/2022: Initial version,,,yes
