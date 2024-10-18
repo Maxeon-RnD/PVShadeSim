@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: pvshadesim
-Version: 0.0.4
+Version: 0.0.5
 Summary: A physical and electrical shade model using Shapely and PVMismatch.
 Author-email: Kiran Balasubramanian <kiran.balasubramanian@maxeon.com>
 Maintainer-email: Kiran Balasubramanian <kiran.balasubramanian@maxeon.com>
