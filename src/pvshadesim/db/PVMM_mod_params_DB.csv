@@ -1,0 +1,4 @@
+﻿uniqueName,paramsID,tech,Cell_type,Cell_rotated,Num_cells_X,Num_cells_Y,CellSpace_X,CellSpace_Y,Num_diodes,is_Series,parallel_type,Num_parallel,EdgeSpace_X,EdgeSpace_Y,Mod_X,Mod_Y,Glass_thick,Frame_2_glass,Lip_thick,Lip_length,more_crossties,TCT,outer_circuit,VBYPASS,user_cell_idx,comment_source,comment_2,comment_3,comment_4,isPreferred
+default_full_series,990001,default_full,default_full_cell_v1,FALSE,6,12,3.5,3.8182,3,TRUE,snake_together,1,16,16,1002,1979,2,3,2,8,None,FALSE,series,-0.5,FALSE,,,,,yes
+default_half_TB,990002,default_half,default_half_cell_v1,FALSE,6,18,2,5.41176,3,FALSE,TB_half,2,16,16,1134,1762,2,3,2,8,None,FALSE,series,-0.5,FALSE,,,,,yes
+default_half_user,990003,default_half,default_half_cell_v1,FALSE,6,18,2,5.41176,3,FALSE,LR_half,2,16,16,1134,1762,2,3,2,8,None,FALSE,series,-0.5,default_HC_v1,,,,,yes

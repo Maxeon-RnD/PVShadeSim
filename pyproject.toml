@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pvshadesim"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Kiran Balasubramanian", email="kiran.balasubramanian@maxeon.com" },
 ]
@@ -21,7 +21,7 @@ classifiers = [
 dependencies = [
   "numpy",
   "pandas",
-  "v_PVMismatch",
+  "v_pvmismatch",
   "shapely",
   "matplotlib",
   "seaborn",
@@ -43,10 +43,9 @@ namespaces = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-PVShadeSim = ["*.csv"]
-"PVShadeSim.data" = ["*.pickle"]
-"PVShadeSim.db" = ["*.csv", "*.xlsx"]
-"PVShadeSim.docs.examples" = ["*.csv", "*.ipynb"]
+pvshadesim = ["*.csv"]
+"pvshadesim.data" = ["*.pickle"]
+"pvshadesim.db" = ["*.csv", "*.xlsx"]
 
 [project.urls]
 Homepage = "https://github.com/Maxeon-RnD/PVShadeSim"

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: pvshadesim
-Version: 0.0.3
+Version: 0.0.4
 Summary: A physical and electrical shade model using Shapely and PVMismatch.
 Author-email: Kiran Balasubramanian <kiran.balasubramanian@maxeon.com>
 Maintainer-email: Kiran Balasubramanian <kiran.balasubramanian@maxeon.com>
@@ -14,7 +14,7 @@ Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: numpy
 Requires-Dist: pandas
-Requires-Dist: v_PVMismatch
+Requires-Dist: v_pvmismatch
 Requires-Dist: shapely
 Requires-Dist: matplotlib
 Requires-Dist: seaborn
@@ -29,15 +29,15 @@ Requires-Dist: dataframe_image
 ## Install & Setup
 In a fresh Python virtual environment, simply run:
 
-```bash
-$ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pvshadesim
+```
+pip install pvshadesim
 ```
 
 ### Install using .whl file (Recommended)
 Download files from Github and run the latest version of the .whl file using the command below from the parent folder.
 
-```bash
-$ pip install .\dist\pvshadesim-<version>-py3-none-any.whl
+```
+pip install .\dist\pvshadesim-<version>-py3-none-any.whl
 ```
 
 ## Requirements
