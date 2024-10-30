@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: pvshadesim
-Version: 0.0.5
+Version: 0.0.6
 Summary: A physical and electrical shade model using Shapely and PVMismatch.
 Author-email: Kiran Balasubramanian <kiran.balasubramanian@maxeon.com>
 Maintainer-email: Kiran Balasubramanian <kiran.balasubramanian@maxeon.com>
@@ -14,6 +14,7 @@ Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: numpy
 Requires-Dist: pandas
+Requires-Dist: openpyxl
 Requires-Dist: v_pvmismatch
 Requires-Dist: shapely
 Requires-Dist: matplotlib
@@ -42,7 +43,7 @@ pip install .\dist\pvshadesim-<version>-py3-none-any.whl
 
 ## Requirements
 
-PVShadeSim requires Matplotlib, Seaborn, Plotly, NumPy, Pandas, v_PVMismatch, Shapely and Dataframe_image.
+PVShadeSim requires Matplotlib, Seaborn, Plotly, NumPy, Pandas, Openpyxl, v_PVMismatch, Shapely and Dataframe_image.
 
 ## Current Maintainer at Maxeon Solar
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Simulate the electrical model of the module/ system for all shade scenarios."""
+"""Simulate the electrical model of module/ system for all shade scenarios."""
 
 import time
 import copy
@@ -8,27 +8,33 @@ import warnings
 import pandas as pd
 import numpy as np
 
-from v_pvmismatch import vpvsystem, vpvcell, vpvmodule, vpvstring
+from v_pvmismatch import vpvsystem, vpvcell, vpvmodule, vpvstring, cell_curr
 
 from .utils import save_pickle
 
 warnings.filterwarnings("ignore")
 
 
-def gen_pvmmvec_shade_results(mods_sys_dict, pickle_fn='Gen_PVMM_Vectorized_Shade_Results.pickle',
+def gen_pvmmvec_shade_results(mods_sys_dict,
+                              pickle_fn='Gen_PVMM_Vectorized_Shade_Results.pickle',
                               irrad_suns=1, Tcell=298.15, NPTS=1500,
-                              NPTS_cell=100, use_cell_NPT=False, save_detailed=False, TUV_class=False,
-                              for_gui=False, excel_fn="PVMM_Vectorized_Shade_Simulation_Results.xlsx",
-                              d_p_fn='Detailed_Data.pickle'):
+                              NPTS_cell=100, use_cell_NPT=False,
+                              save_detailed=False, TUV_class=False,
+                              for_gui=False,
+                              excel_fn="PVMM_Vectorized_Shade_Simulation_Results.xlsx",
+                              d_p_fn='Detailed_Data.pickle',
+                              run_cellcurr=True,
+                              c_p_fn='Cell_current.pickle', Ee_round=2):
     """
-    Run vectorized PVMismatch for all the modules, and shade scenarios in the simulation.
+    Run vectorized PVMismatch for all modules, and shade scenarios in sim.
 
     Parameters
     ----------
     mods_sys_dict : dict
-        Dictionary containing the physical and electrical models of modules in the simulation.
+        Dict containing physical and electrical models of modules in sim.
     pickle_fn : str, optional
-        Pickle file containing all the detailed results. The default is 'Gen_PVMM_Vectorized_Shade_Results.pickle'.
+        Pickle file containing all detailed results.
+        The default is 'Gen_PVMM_Vectorized_Shade_Results.pickle'.
     irrad_suns : float, optional
         Nominal irradiance in suns. The default is 1.
     Tcell : float, optional
@@ -44,11 +50,22 @@ def gen_pvmmvec_shade_results(mods_sys_dict, pickle_fn='Gen_PVMM_Vectorized_Shad
     TUV_class : bool, optional
         Run TUV shading tests. The default is False.
     for_gui : bool, optional
-        Generate module pickle files for Maxeon shading GUI. The default is False.
+        Generate module pickle files for Maxeon shading GUI.
+        The default is False.
     excel_fn : str, optional
-        Path of Results output file. The default is "PVMM_Vectorized_Shade_Simulation_Results.xlsx".
+        Path of Results output file.
+        The default is "PVMM_Vectorized_Shade_Simulation_Results.xlsx".
     d_p_fn : str, optional
         Detailed pickle file name. The default is 'Detailed_Data.pickle'.
+    run_cellcurr : bool, optional
+        Run cell current estimation model.
+        The default is True.
+    c_p_fn : str, optional
+        Cell current estimation pickle file name.
+        The default is 'Cell_current.pickle'.
+    Ee_round : int, optional
+        Rounding factor for Irradiance.
+        The default is 2.
 
     Returns
     -------
@@ -59,9 +76,13 @@ def gen_pvmmvec_shade_results(mods_sys_dict, pickle_fn='Gen_PVMM_Vectorized_Shad
     t0 = time.time()
     if pickle_fn is not None:
         # Create Empty dataframe to store results
-        res_names = ['Module', 'Cell Name', 'Orientation', 'DC/AC', 'Plot Label', 'Num Mod shade', 'Shade Definition',
-                     'Shade Type', 'Shade Variation', 'Mod. Shade %', 'Pmp [W]', 'Vmp [V]', 'Imp [A]', 'Voc [V]',
-                     'Isc [A]', 'FF', 'Power change [%]', 'Num_BPdiode_active', 'AL', 'TUV Class', 'Isys [A]',
+        res_names = ['Module', 'Cell Name', 'Orientation', 'DC/AC',
+                     'Plot Label', 'Num Mod shade', 'Shade Definition',
+                     'Shade Type', 'Shade Variation', 'Mod. Shade %',
+                     'Pmp [W]', 'Vmp [V]', 'Imp [A]', 'Voc [V]',
+                     'Isc [A]', 'FF', 'Power change [%]', 'Num_BPdiode_active',
+                     'ncells_Rev_mpp', 'ncells_Rev_isc',
+                     'AL', 'TUV Class', 'Isys [A]',
                      'Vsys [V]', 'Psys [W]', 'sys_class']
         dfCases = pd.DataFrame(columns=res_names)
         mod_sys_keys = list(mods_sys_dict.keys())
@@ -72,7 +93,8 @@ def gen_pvmmvec_shade_results(mods_sys_dict, pickle_fn='Gen_PVMM_Vectorized_Shad
             for cell_name in cell_mod_keys:
                 orient_keys = list(mods_sys_dict[mod_name][cell_name].keys())
                 for orient in orient_keys:
-                    ec_keys = list(mods_sys_dict[mod_name][cell_name][orient].keys())
+                    ec_keys = list(
+                        mods_sys_dict[mod_name][cell_name][orient].keys())
                     for ec_type in ec_keys:
                         t1 = time.time()
                         maxsys_dict = mods_sys_dict[mod_name][cell_name][orient][ec_type]
@@ -88,32 +110,41 @@ def gen_pvmmvec_shade_results(mods_sys_dict, pickle_fn='Gen_PVMM_Vectorized_Shad
                         is_AC_Mod = maxsys_dict['Sim_info']['is_AC_Mod']
                         plot_label = maxsys_dict['Sim_info']['plot_label']
                         # Build Ee array for system
-                        SA_list = maxsys_dict['Shade Scenarios']['Shade Array'].to_list()
+                        SA_list = maxsys_dict['Shade Scenarios']['Shade Array'].to_list(
+                        )
                         Ee_shdarr_np = np.stack(SA_list, axis=0)
                         # Ee_shdarr_np[Ee_shdarr_np < 0.01] = 0.01
-                        Ee_shdarr_np = np.round(irrad_suns*(1-Ee_shdarr_np), 6)
+                        Ee_shdarr_np = np.round(irrad_suns*(1-Ee_shdarr_np),
+                                                Ee_round)
                         Ee_arr_np = irrad_suns * \
                             np.ones(
-                                (Ee_shdarr_np.shape[0], num_str, str_len, idx_map.shape[0], idx_map.shape[1]))
+                                (Ee_shdarr_np.shape[0], num_str, str_len,
+                                 idx_map.shape[0], idx_map.shape[1]))
                         for nmod_sh in num_mods_shade:
                             if nmod_sh > str_len:
                                 nmod_sh = str_len
                             for idx_m in range(nmod_sh):
                                 for i_str in range(num_str):
-                                    Ee_arr_np[:, i_str, idx_m, :, :] = Ee_shdarr_np
+                                    Ee_arr_np[:, i_str, idx_m,
+                                              :, :] = Ee_shdarr_np
                             # Create sub DF
                             dfSubCases = pd.DataFrame(
-                                columns=res_names, index=list(range(df_shd_sce.shape[0])))
+                                columns=res_names,
+                                index=list(range(df_shd_sce.shape[0])))
                             dfSubCases['Module'] = mod_name
                             dfSubCases['Cell Name'] = cell_name
                             dfSubCases['Orientation'] = orient
                             dfSubCases['DC/AC'] = ec_type
                             dfSubCases['Plot Label'] = plot_label
                             dfSubCases['Num Mod shade'] = nmod_sh
-                            dfSubCases['Shade Definition'] = df_shd_sce['Scenario Definition'].to_list()
-                            dfSubCases['Shade Type'] = df_shd_sce['Scenario Type'].to_list()
-                            dfSubCases['Shade Variation'] = df_shd_sce['Scenario Variation'].to_list()
-                            dfSubCases['Mod. Shade %'] = df_shd_sce['Module Shaded Area Percentage'].to_list()
+                            dfSubCases['Shade Definition'] = df_shd_sce['Scenario Definition'].to_list(
+                            )
+                            dfSubCases['Shade Type'] = df_shd_sce['Scenario Type'].to_list(
+                            )
+                            dfSubCases['Shade Variation'] = df_shd_sce['Scenario Variation'].to_list(
+                            )
+                            dfSubCases['Mod. Shade %'] = df_shd_sce['Module Shaded Area Percentage'].to_list(
+                            )
                             # Vectorized PVMM
 
                             # Cell pos and Vbypass
@@ -123,11 +154,13 @@ def gen_pvmmvec_shade_results(mods_sys_dict, pickle_fn='Gen_PVMM_Vectorized_Shad
 
                             # Generate Ee & Tcell array for simulation
                             Ee_vec, Tcell_vec = vpvsystem.gen_sys_Ee_Tcell_array(
-                                Ee_shdarr_np.shape[0], num_str, str_len, idx_map.shape[0], idx_map.shape[1],
+                                Ee_shdarr_np.shape[0], num_str, str_len,
+                                idx_map.shape[0], idx_map.shape[1],
                                 Ee_arr_np, Tcell)
                             # Get unique Ee at cell level
                             Ee_cell, u_cell_type = vpvsystem.get_unique_Ee(
-                                Ee_vec, search_type='cell', cell_type=cell_type)
+                                Ee_vec, search_type='cell',
+                                cell_type=cell_type)
                             # Get unique Ee at module level
                             Ee_mod, _ = vpvsystem.get_unique_Ee(
                                 Ee_vec, search_type='module')
@@ -146,26 +179,38 @@ def gen_pvmmvec_shade_results(mods_sys_dict, pickle_fn='Gen_PVMM_Vectorized_Shad
                                 pvcs.append(pvc)
                             # Run 2 diode model on unique Ee
                             cell_data = vpvcell.two_diode_model(
-                                pvcs, Ee_cell, u_cell_type, Tcell*np.ones(Ee_cell.shape), NPTS=NPTS,
+                                pvcs, Ee_cell, u_cell_type,
+                                Tcell*np.ones(Ee_cell.shape), NPTS=NPTS,
                                 NPTS_cell=NPTS_cell, use_cell_NPT=use_cell_NPT)
                             NPT_dict = cell_data['NPT']
                             # MODULE #
                             # Pre-generated
                             mod_data = vpvmodule.calcMods(
-                                cell_pos, maxmod, idx_map, Ee_mod, Ee_cell, u_cell_type, cell_type,
-                                cell_data, outer_circuit)
+                                cell_pos, maxmod, idx_map, Ee_mod, Ee_cell,
+                                u_cell_type, cell_type,
+                                cell_data, outer_circuit,
+                                run_cellcurr=run_cellcurr)
                             if is_AC_Mod:
                                 # AC SYSTEM #
                                 sys_data = vpvsystem.calcACSystem(
-                                    Ee_vec, Ee_mod, mod_data, NPT_dict)
+                                    Ee_vec, Ee_mod, mod_data, NPT_dict,
+                                    run_cellcurr=run_cellcurr)
+                                ccmod = cell_curr.est_cell_current_AC(sys_data,
+                                                                      idx_map)
                             else:
                                 # DC #
                                 # STRING #
                                 str_data = vpvstring.calcStrings(
-                                    Ee_str, Ee_mod, mod_data, NPT_dict)
+                                    Ee_str, Ee_mod, mod_data, NPT_dict,
+                                    run_cellcurr=run_cellcurr)
                                 # SYSTEM #
                                 sys_data = vpvsystem.calcSystem(
-                                    Ee_vec, Ee_str, str_data, NPT_dict)
+                                    Ee_vec, Ee_str, str_data, NPT_dict,
+                                    run_cellcurr=run_cellcurr)
+                                ccmod = cell_curr.est_cell_current_DC(sys_data,
+                                                                      str_data,
+                                                                      mod_data,
+                                                                      idx_map)
 
                             dfSubCases['Pmp [W]'] = sys_data['Pmp'].tolist()
                             dfSubCases['Vmp [V]'] = sys_data['Vmp'].tolist()
@@ -173,7 +218,12 @@ def gen_pvmmvec_shade_results(mods_sys_dict, pickle_fn='Gen_PVMM_Vectorized_Shad
                             dfSubCases['Voc [V]'] = sys_data['Voc'].tolist()
                             dfSubCases['Isc [A]'] = sys_data['Isc'].tolist()
                             dfSubCases['FF'] = sys_data['FF'].tolist()
-                            dfSubCases['Num_BPdiode_active'] = sys_data['num_active_bpd'].tolist()
+                            dfSubCases['Num_BPdiode_active'] = sys_data['num_active_bpd'].tolist(
+                            )
+                            dfSubCases['ncells_Rev_mpp'] = np.sum(ccmod['cell_isRev_mp'],
+                                                                  axis=(1, 2, 3, 4)).tolist()
+                            dfSubCases['ncells_Rev_isc'] = np.sum(ccmod['cell_isRev_sc'],
+                                                                  axis=(1, 2, 3, 4)).tolist()
                             pmp0 = sys_data['Pmp'][0]
                             dfSubCases['Power change [%]'] = 100 * \
                                 (dfSubCases['Pmp [W]']/pmp0 - 1)
@@ -182,10 +232,12 @@ def gen_pvmmvec_shade_results(mods_sys_dict, pickle_fn='Gen_PVMM_Vectorized_Shad
                             dfSubCases['Psys [W]'] = sys_data['Psys'].tolist()
                             dfSubCases['sys_class'][0] = sys_data
                             # Calculate TUV Additional Loss (AL)
-                            dfSubCases['AL'] = -1*dfSubCases['Power change [%]'] - dfSubCases['Mod. Shade %']
+                            dfSubCases['AL'] = -1*dfSubCases['Power change [%]'] - \
+                                dfSubCases['Mod. Shade %']
                             # Calculate the TUV class if required
                             if TUV_class:
-                                dfSubCases['TUV Class'] = calc_TUV_class(dfSubCases['AL'].to_list())
+                                dfSubCases['TUV Class'] = calc_TUV_class(
+                                    dfSubCases['AL'].to_list())
                             dfCases = pd.concat([dfCases, dfSubCases])
                             if for_gui:
                                 module_dict = {}
@@ -230,6 +282,11 @@ def gen_pvmmvec_shade_results(mods_sys_dict, pickle_fn='Gen_PVMM_Vectorized_Shad
                                 detailed_dict[plot_label]['Other']['Cell_Polygons'] = maxsys_dict['Physical_Info']['Cell_Polygons']
                             if for_gui:
                                 save_pickle(plot_label+'.pickle', module_dict)
+                            if run_cellcurr:
+                                cc_mod = {}
+                                cc_mod[plot_label] = copy.deepcopy(ccmod)
+                                save_pickle('_'.join([plot_label, c_p_fn]),
+                                            cc_mod)
                         print('Time elapsed to run ' + plot_label +
                               ': ' + str(time.time() - t1) + ' s')
 

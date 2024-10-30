@@ -18,14 +18,16 @@ def create_pvmod_dict(pvmod_params, sim_config, pvcell_params,
                       cell_idx_xls, cell_pos_xls, gen_mod_idx=False,
                       NPTS=1500, Tcell=298.15):
     """
-    Generate the simulation dictionary containing the physical and electrical models of the module for all sims.
+    Generate the simulation dictionary.
+
+    Contains the physical and electrical models of the module for all sims.
 
     Parameters
     ----------
     pvmod_params : pandas.DataFrame
         Dataframe containing the PV module database.
     sim_config : pandas.DataFrame
-        Dataframe containing the modules, cells, shade type, system info to simulate.
+        DF containing the modules, cells, shade type, system info to simulate.
     pvcell_params : pandas.DataFrame
         Dataframe containing the PV cell database.
     cell_idx_xls : str
@@ -33,16 +35,19 @@ def create_pvmod_dict(pvmod_params, sim_config, pvcell_params,
     cell_pos_xls : str
         Path to the "User_cell_pos.xlsx" file.
     gen_mod_idx : bool, optional
-        Generate images of the cell position index within the module. The default is False.
+        Generate images of the cell position index within the module.
+        The default is False.
     NPTS : int, optional
-        Number of points in the IV curve. This is an input to PVMismatch. The default is 1500.
+        Number of points in the IV curve. This is an input to PVMismatch.
+        The default is 1500.
     Tcell : float, optional
-        Cell temperature in kelvin (K). This is an input to PVMismatch. The default is 298.15.
+        Cell temperature in kelvin (K). This is an input to PVMismatch.
+        The default is 298.15.
 
     Returns
     -------
     mods_sys_dict : dict
-        Dictionary containing the physical and electrical models of modules in the simulation.
+        Dict with physical and electrical models of modules in the simulation.
 
     """
     sim_config_T = sim_config.T
@@ -104,7 +109,8 @@ def create_pvmod_dict(pvmod_params, sim_config, pvcell_params,
                     num_mods_shade_list[idx_sim], is_AC_Mod_list[idx_sim],
                     plot_label_list[idx_sim], MSX_list[idx_sim],
                     MSY_list[idx_sim], MEX_list[idx_sim],
-                    MEY_list[idx_sim], Tilt_list[idx_sim], Azimuth_list[idx_sim],
+                    MEY_list[idx_sim], Tilt_list[idx_sim],
+                    Azimuth_list[idx_sim],
                     str_tilt_list[idx_sim], numStrTrack_list[idx_sim],
                     mkt_list[idx_sim], gcr_list[idx_sim]]
         mods_sys_dict[mod_name][cname][orientation][mod_type] = create_pv_mod(pvmod_params, pvcell_params,
@@ -117,7 +123,8 @@ def create_pvmod_dict(pvmod_params, sim_config, pvcell_params,
     return mods_sys_dict
 
 
-def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls, mod_name, cell_name, is_Landscape,
+def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls,
+                  mod_name, cell_name, is_Landscape,
                   shade_sce, sim_info,
                   NPTS=1500, Tcell=298.15,
                   idx_map=None):
@@ -145,11 +152,15 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls, mod_n
     sim_info : list
         List containing other simulation information about the system.
     NPTS : int, optional
-        Number of points in the IV curve. This is an input to PVMismatch. The default is 1500.
+        Number of points in the IV curve. This is an input to PVMismatch.
+        The default is 1500.
     Tcell : float, optional
-        Cell temperature in kelvin (K). This is an input to PVMismatch. The default is 298.15.
+        Cell temperature in kelvin (K). This is an input to PVMismatch.
+        The default is 298.15.
     idx_map : numpy.ndarray, optional
-        User provided cell index map. This will be deprecated in a later version. Don't use. The default is None.
+        User provided cell index map.
+        This will be deprecated in a later version. Don't use.
+        The default is None.
 
     Returns
     -------
@@ -183,7 +194,8 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls, mod_n
                 cell_idx_xls, sheet_name=user_sht_name).to_numpy()
             user_cell_pos_df = pd.read_excel(
                 cell_pos_xls, sheet_name=user_sht_name)
-            user_cell_pos = user_cell_pos_df[user_cell_pos_df.columns.to_list()[0]].to_list()
+            user_cell_pos = user_cell_pos_df[user_cell_pos_df.columns.to_list()[
+                0]].to_list()
             use_user = True
             if 'series' in user_cell_pos_df.columns.to_list()[0]:
                 user_series = True
@@ -248,8 +260,10 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls, mod_n
             Mod_Space_Y = (Mod_Y/gcr) - Mod_Y*np.cos(np.deg2rad(Tilt))
     mod_coord_array = create_cell_coordinates(sys_idx_map, [Mod_X], [Mod_Y],
                                               Mod_Space_X, Mod_Space_Y,
-                                              Mod_Edge_X, Mod_Edge_Y, Tilt, str_tilt,
-                                              is_Landscape=is_Landscape, is_Mod=True)
+                                              Mod_Edge_X, Mod_Edge_Y,
+                                              Tilt, str_tilt,
+                                              is_Landscape=is_Landscape,
+                                              is_Mod=True)
     # Module polygons
     mod_poly_df = cell_ploygons(mod_coord_array)
 
@@ -268,8 +282,10 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls, mod_n
             Mod_orig_X = mx[0]
             Mod_orig_Y = my[0]
             cell_coord_array = create_cell_coordinates(idx_map, cell_X, cell_Y,
-                                                       CellSpace_X, CellSpace_Y,
-                                                       EdgeSpace_X, EdgeSpace_Y,
+                                                       CellSpace_X,
+                                                       CellSpace_Y,
+                                                       EdgeSpace_X,
+                                                       EdgeSpace_Y,
                                                        Tilt, str_tilt,
                                                        Mod_orig_X, Mod_orig_Y,
                                                        is_Landscape=is_Landscape)
@@ -282,6 +298,10 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls, mod_n
     # Extract Module info
     tct_flag = mod_params['TCT']
     add_crstie = mod_params['more_crossties']
+    try:
+        add_crstie = ast.literal_eval(add_crstie)
+    except ValueError:
+        add_crstie = None
     # cellpos calculation
     # number columns or cells per diode (depends on series or parallel)
     numcells_per_diode = calc_numcols_diode(num_cells_x, num_cells_y,
@@ -298,10 +318,8 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls, mod_n
         if user_series:
             cell_pos = set_crosstie(cell_pos, value_crosstie=False)
         else:
-            add_crstie = ast.literal_eval(add_crstie)
             if add_crstie is not None:
                 # Add additional crossties if specified
-
                 for i in add_crstie:
                     cell_pos = set_idx(cell_pos, i, value_crosstie=True)
     else:
@@ -314,10 +332,8 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls, mod_n
             cell_pos = pvmodule.crosstied_cellpos_pat(numcells_per_diode,
                                                       num_parallel,
                                                       partial=not tct_flag)
-            add_crstie = ast.literal_eval(add_crstie)
             if add_crstie is not None:
                 # Add additional crossties if specified
-
                 for i in add_crstie:
                     cell_pos = set_idx(cell_pos, i, value_crosstie=True)
     # Create PVMM Cell class
@@ -343,7 +359,8 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls, mod_n
                                   cellArea=CELLAREA[0])
     # Build PV system
     maxsys = pvsystem.PVsystem(pvconst=pvconstants.PVconstants(npts=NPTS),
-                               pvmods=maxmodule, numberStrs=num_str, numberMods=str_len)
+                               pvmods=maxmodule,
+                               numberStrs=num_str, numberMods=str_len)
     unique_cell_types = cell_types.copy()
     if len(cell_name) < idx_map.shape[1]:
         cell_name = cell_name * idx_map.shape[1]
@@ -414,9 +431,12 @@ def create_idx_map(num_cells_x, num_cells_y, num_parallel=2,
                    layout_type='snake_together', is_Series=True,
                    Cell_rotated=False):
     """
-    Generate the cell index map of a module given the number of cells in 2D for some standard modules.
+    Generate the cell index map of a module.
 
-    Options for layout_type are "snake_together", "LR_half", "TB_half", and "all_parallel".
+    Given the number of cells in 2D for some standard modules.
+
+    Options for layout_type are "snake_together", "LR_half", "TB_half",
+    and "all_parallel".
 
     Parameters
     ----------
@@ -427,11 +447,13 @@ def create_idx_map(num_cells_x, num_cells_y, num_parallel=2,
     num_parallel : int, optional
         Number of parallel substrings in a module. The default is 2.
     layout_type : str, optional
-        Layout type for a module with parallel substrings. The default is 'snake_together'.
+        Layout type for a module with parallel substrings.
+        The default is 'snake_together'.
     is_Series : bool, optional
         Is it a series only module? The default is True.
     Cell_rotated : bool, optional
-        Are the cells rotated by 90 deg (a.k.a horizontal stringing)? The default is False.
+        Are the cells rotated by 90 deg (a.k.a horizontal stringing)?
+        The default is False.
 
     Returns
     -------
@@ -453,16 +475,17 @@ def set_crosstie(cell_pos_in, value_crosstie=False):
 
     # Return cell_pos_out
     #
-    # cell_pos is a list of lists of lists, so this function first finds the cell
+    # cell_pos is a list of lists of lists,
+    # so this function first finds the cell
     # item with the indicated idx
 
     Parameters
     ----------
     cell_pos_in : List
-        List of lists of lists containing the electrical circuit architecture for
+        List of lists of lists containing the electric circuit architecture for
         a PVMM PV module with indices and cross tie information.
     idx : int
-        Index for which Crosstie needs to be set to value_crosstie in the cell_pos.
+        Index at which Crosstie to be set to value_crosstie in the cell_pos.
     value_crosstie : Boolean, optional
         Flag indicating whether to set the crossite of idx to True or False.
         The default is True.
@@ -470,7 +493,7 @@ def set_crosstie(cell_pos_in, value_crosstie=False):
     Returns
     -------
     cell_pos_out : List
-        List of lists of lists containing the electrical circuit architecture for
+        List of lists of lists containing the electric circuit architecture for
         a PVMM PV module with indices and cross tie information. The crossties
         are updated based on input.
 
@@ -499,7 +522,8 @@ def create_series_map(num_cells_x, num_cells_y, Cell_rotated=False):
     num_cells_y : Int
         Number of cells in Y direction or number of cell rows.
     Cell_rotated : bool, optional
-        Are the cells rotated by 90 deg (a.k.a horizontal stringing)? The default is False.
+        Are the cells rotated by 90 deg (a.k.a horizontal stringing)?
+        The default is False.
 
     Returns
     -------
@@ -511,14 +535,16 @@ def create_series_map(num_cells_x, num_cells_y, Cell_rotated=False):
     # Create regular matrix with arange, reshape to required matrix size.
     if Cell_rotated:
         inp_map = np.arange(int(num_cells_y*num_cells_x),
-                            dtype=int).reshape(int(num_cells_y), int(num_cells_x))
+                            dtype=int).reshape(int(num_cells_y),
+                                               int(num_cells_x))
         idx_map = inp_map.copy()
         # Create snake pattern in matrix
         # For every second row, order of numbers is reversed.
         idx_map[1::2, :] = inp_map[1::2, ::-1]
     else:
         inp_map = np.arange(int(num_cells_x*num_cells_y),
-                            dtype=int).reshape(int(num_cells_x), int(num_cells_y)).T
+                            dtype=int).reshape(int(num_cells_x),
+                                               int(num_cells_y)).T
         idx_map = inp_map.copy()
         # Create snake pattern in matrix
         # For every second column, order of numbers is reversed.
@@ -531,8 +557,8 @@ def create_parallel_map(num_cells_x, num_cells_y, num_parallel=2,
     """
     Create topological index map for a Parallel circuit module.
 
-    The number of cells in the X & Y direction, number of parallel substrings, and the layout
-    type are specified.
+    The number of cells in the X & Y direction, number of parallel substrings,
+    and the layout type are specified.
 
     Parameters
     ----------
@@ -545,11 +571,12 @@ def create_parallel_map(num_cells_x, num_cells_y, num_parallel=2,
     layout_type : string, optional
         Layout Type. The default is 'snake_together'. All options include:
             1) snake_together
-            2) LR_half --> Parallel substring start in the middle and cut module along Y direction.
-            3) TB_half --> Parallel substring start in the middle and cut module along X direction.
-            4) all_parallel --> All cell columns are parallel substrings. Eg. P-series modules.
+            2) LR_half --> Parallel substr split left-right.
+            3) TB_half --> Parallel substr split top-bottom.
+            4) all_parallel --> All cell columns are parallel substrings.
     Cell_rotated : bool, optional
-        Are the cells rotated by 90 deg (a.k.a horizontal stringing)? The default is False.
+        Are the cells rotated by 90 deg (a.k.a horizontal stringing)?
+        The default is False.
 
     Raises
     ------
@@ -594,7 +621,7 @@ def create_snake_together(num_cells_x, num_cells_y, num_parallel=2,
     """
     Create topological index map for a Snaked Together Parallel circuit module.
 
-    The number of cells in the X & Y direction, and number of parallel substrings,
+    The number of cells in the X & Y direction, and number of parallel substr,
     are specified.
 
     Parameters
@@ -606,7 +633,8 @@ def create_snake_together(num_cells_x, num_cells_y, num_parallel=2,
     num_parallel : Int, optional
         Number of parallel substrings. The default is 2.
     Cell_rotated : bool, optional
-        Are the cells rotated by 90 deg (a.k.a horizontal stringing)? The default is False.
+        Are the cells rotated by 90 deg (a.k.a horizontal stringing)?
+        The default is False.
 
     Returns
     -------
@@ -615,14 +643,14 @@ def create_snake_together(num_cells_x, num_cells_y, num_parallel=2,
         each cell in the module.
 
     """
-    # For the parallel case, it is similar to the series but need to split based
+    # For the parallel case, it is similar to series but need to split based
     # on number of parallel strings.
     if Cell_rotated:
         mat_list = []
         start_list = np.arange(0, int(num_cells_y*num_cells_x),
                                int(num_cells_y*num_cells_x/num_parallel))
         for idx_p in range(num_parallel):
-            # Create regular matrix with arange, reshape to required matrix size.
+            # Create regular matrix with arange, reshape to matrix size.
             inp_map = np.arange(int(start_list[idx_p]),
                                 int(num_cells_y*num_cells_x /
                                     num_parallel)+start_list[idx_p],
@@ -642,7 +670,7 @@ def create_snake_together(num_cells_x, num_cells_y, num_parallel=2,
         start_list = np.arange(0, int(num_cells_x*num_cells_y),
                                int(num_cells_x*num_cells_y/num_parallel))
         for idx_p in range(num_parallel):
-            # Create regular matrix with arange, reshape to required matrix size.
+            # Create regular matrix with arange, reshape to matrix size.
             inp_map = np.arange(int(start_list[idx_p]),
                                 int(num_cells_x*num_cells_y /
                                     num_parallel)+start_list[idx_p],
@@ -665,7 +693,7 @@ def create_LR_half(num_cells_x, num_cells_y, num_parallel=2,
     """
     Create topological index map for a Left-Right Half Parallel circuit module.
 
-    The number of cells in the X & Y direction, and number of parallel substrings,
+    The number of cells in the X & Y direction, and number of parallel substr,
     are specified.
 
     Parameters
@@ -677,7 +705,8 @@ def create_LR_half(num_cells_x, num_cells_y, num_parallel=2,
     num_parallel : Int, optional
         Number of parallel substrings. The default is 2.
     Cell_rotated : bool, optional
-        Are the cells rotated by 90 deg (a.k.a horizontal stringing)? The default is False.
+        Are the cells rotated by 90 deg (a.k.a horizontal stringing)?
+        The default is False.
 
     Raises
     ------
@@ -697,7 +726,7 @@ def create_LR_half(num_cells_x, num_cells_y, num_parallel=2,
             start_list = np.arange(0, int(num_cells_y*num_cells_x),
                                    int(num_cells_y*num_cells_x/num_parallel))
             for idx_p in range(num_parallel):
-                # Create regular matrix with arange, reshape to required matrix size.
+                # Create regular matrix with arange, reshape to matrix size.
                 inp_map = np.arange(int(start_list[idx_p]),
                                     int(num_cells_y*num_cells_x /
                                         num_parallel)+start_list[idx_p],
@@ -719,7 +748,7 @@ def create_LR_half(num_cells_x, num_cells_y, num_parallel=2,
             start_list = np.arange(0, int(num_cells_x*num_cells_y),
                                    int(num_cells_x*num_cells_y/num_parallel))
             for idx_p in range(num_parallel):
-                # Create regular matrix with arange, reshape to required matrix size.
+                # Create regular matrix with arange, reshape to matrix size.
                 inp_map = np.arange(int(start_list[idx_p]),
                                     int(num_cells_x*num_cells_y /
                                         num_parallel)+start_list[idx_p],
@@ -748,7 +777,7 @@ def create_TB_half(num_cells_x, num_cells_y, num_parallel,
     """
     Create topological index map for a Top-Bottom Half Parallel circuit module.
 
-    The number of cells in the X & Y direction, and number of parallel substrings,
+    The number of cells in the X & Y direction, and number of parallel substr,
     are specified.
 
     Parameters
@@ -760,7 +789,8 @@ def create_TB_half(num_cells_x, num_cells_y, num_parallel,
     num_parallel : Int, optional
         Number of parallel substrings. The default is 2.
     Cell_rotated : bool, optional
-        Are the cells rotated by 90 deg (a.k.a horizontal stringing)? The default is False.
+        Are the cells rotated by 90 deg (a.k.a horizontal stringing)?
+        The default is False.
 
     Raises
     ------
@@ -833,7 +863,8 @@ def create_all_parallel(num_cells_x, num_cells_y,
     num_cells_y : Int
         Number of cells in Y direction or number of cell rows.
     Cell_rotated : bool, optional
-        Are the cells rotated by 90 deg (a.k.a horizontal stringing)? The default is False.
+        Are the cells rotated by 90 deg (a.k.a horizontal stringing)?
+        The default is False.
 
     Returns
     -------
@@ -845,17 +876,21 @@ def create_all_parallel(num_cells_x, num_cells_y,
     if Cell_rotated:
         # Create regular matrix with arange, reshape to required matrix size.
         inp_map = np.arange(int(num_cells_y*num_cells_x),
-                            dtype=int).reshape(int(num_cells_y), int(num_cells_x)).T
+                            dtype=int).reshape(int(num_cells_y),
+                                               int(num_cells_x)).T
     else:
         # Create regular matrix with arange, reshape to required matrix size.
         inp_map = np.arange(int(num_cells_x*num_cells_y),
-                            dtype=int).reshape(int(num_cells_x), int(num_cells_y)).T
+                            dtype=int).reshape(int(num_cells_x),
+                                               int(num_cells_y)).T
     return inp_map
 
 
 def create_sys_idx_map(str_len, num_str):
     """
-    Generate the system index map containing the modules in a string and the number of strings.
+    Generate the system index map.
+
+    Containing the modules in a string and the number of strings.
 
     Parameters
     ----------
@@ -883,7 +918,7 @@ def create_cell_coordinates(idx_map, cell_X, cell_Y,
                             is_Mod=False,
                             is_Landscape=False):
     """
-    Calculate cell coordinates and store in a numpy array, given the cell and module dimensions.
+    Calculate cell coordinates, given the cell and module dimensions.
 
     Parameters
     ----------
@@ -933,9 +968,6 @@ def create_cell_coordinates(idx_map, cell_X, cell_Y,
         CellSpace_X, CellSpace_Y = CellSpace_Y, CellSpace_X
         EdgeSpace_X, EdgeSpace_Y = EdgeSpace_Y, EdgeSpace_X
 
-    # Update CellSpace_Y if it is string tilt & Module
-    # if str_tilt and is_Mod:
-    #     CellSpace_Y = CellSpace_Y - (cell_Y - cell_Y*np.cos(np.deg2rad(Tilt)))
     # Define cell coordinates
 
     # 1. Arrangement of vertices in array: (BL, TL, TR, BR)
@@ -983,14 +1015,16 @@ def create_cell_coordinates(idx_map, cell_X, cell_Y,
     cell_coord_array[:, :, 1, 0] = cell_coord_array[:, :, 0, 0].copy()
     # Top Right
 
-    # The coordinates for the right points can be calculated using the simple formula
+    # The coordinates for the right points calculated using the simple formula
 
     # $$ X = EdgeSpace\_X + cell\_X + idx\_X (CellSpace\_X + cell\_X)
     for col_idx in range(col_idx_array.shape[1]):
         if col_idx == 0:
-            cell_coord_array[:, col_idx, 2, 0] = Mod_orig_X + EdgeSpace_X + cell_X[:, col_idx]
+            cell_coord_array[:, col_idx, 2, 0] = Mod_orig_X + \
+                EdgeSpace_X + cell_X[:, col_idx]
         else:
-            cell_coord_array[:, col_idx, 2, 0] = cell_coord_array[:, col_idx-1, 2, 0] + CellSpace_X + cell_X[:, col_idx]
+            cell_coord_array[:, col_idx, 2, 0] = cell_coord_array[:,
+                                                                  col_idx-1, 2, 0] + CellSpace_X + cell_X[:, col_idx]
     # Bottom Right
     cell_coord_array[:, :, 3, 0] = cell_coord_array[:, :, 2, 0].copy()
 
@@ -1040,7 +1074,8 @@ def cell_ploygons(cell_array):
             lst_tup = []
             for idx_vrt in range(cell_array.shape[2]):
                 lst_tup.append(
-                    (cell_array[idx_row, idx_col, idx_vrt, 0], cell_array[idx_row, idx_col, idx_vrt, 1]))
+                    (cell_array[idx_row, idx_col, idx_vrt, 0],
+                     cell_array[idx_row, idx_col, idx_vrt, 1]))
             cell_poly = Polygon(lst_tup)
             cell_poly_df.iloc[idx_row, idx_col] = cell_poly
     return cell_poly_df
@@ -1060,17 +1095,19 @@ def calc_numcols_diode(num_x, num_y, num_diodes, is_series, num_parallel,
     num_diodes : int
         Number of diodes in the module electric circuit.
     is_series : Boolean
-        Flag to indicate if the cirsuit is a Series or Parallel. True for Series.
+        Flag to indicate if the cirsuit is a Series or Parallel.
+        True for Series.
     num_parallel : Int, optional
         Number of parallel substrings. The default is 2.
     par_lyt_type : string, optional
         Layout Type. The default is 'snake_together'. All options include:
             1) snake_together
-            2) LR_half --> Parallel substring start in the middle and cut module along Y direction.
-            3) TB_half --> Parallel substring start in the middle and cut module along X direction.
-            4) all_parallel --> All cell columns are parallel substrings. Eg. P-series modules.
+            2) LR_half --> Parallel substr split left-right.
+            3) TB_half --> Parallel substr split top-bottom.
+            4) all_parallel --> All cell columns are parallel substrings.
     Cell_rotated : bool, optional
-        Are the cells rotated by 90 deg (a.k.a horizontal stringing)? The default is False.
+        Are the cells rotated by 90 deg (a.k.a horizontal stringing)?
+        The default is False.
 
     Returns
     -------
@@ -1115,7 +1152,8 @@ def calc_numcols_diode(num_x, num_y, num_diodes, is_series, num_parallel,
         # Need to use cells in X & Y direction.
         if par_lyt_type != 'all_parallel':
             # Check if number of cell columns are divisable by num of diodes.
-            # If yes, return a list of equal number of cell columns times row cells by parallel strings.
+            # If yes, return a list of equal number of cell columns times row
+            # cells by parallel strings.
             if num_x % num_diodes == 0:
                 return [int(num_x*num_y/num_diodes/num_parallel)] * num_diodes
             else:
@@ -1145,7 +1183,8 @@ def calc_numcols_diode(num_x, num_y, num_diodes, is_series, num_parallel,
         else:
             # ALL PARALLEL Case" Easier. Need to use cells in Y direction only.
             # Check if number of cell columns are divisable by num of diodes.
-            # If yes, return a list of equal number of cell columns times row cells by parallel strings.
+            # If yes, return a list of equal number of cell columns times row
+            # cells by parallel strings.
             if num_y % num_diodes == 0:
                 return [int(num_y/num_diodes)] * num_diodes
             else:
@@ -1154,7 +1193,8 @@ def calc_numcols_diode(num_x, num_y, num_diodes, is_series, num_parallel,
                 remainder = num_y % num_diodes
                 # Create a list of base factor only
                 numcols_diode = [int(factor)] * num_diodes
-                # Trivial case of just 2 diodes: Just add additional cells to last diode
+                # Trivial case of just 2 diodes: Just add additional cells to
+                # last diode
                 if num_diodes == 2:
                     numcols_diode[1] = numcols_diode[1] + remainder
                 else:
@@ -1179,61 +1219,22 @@ def calc_numcols_diode(num_x, num_y, num_diodes, is_series, num_parallel,
                 return numcols_diode
 
 
-def set_crosstie(cell_pos_in, value_crosstie=False):
-    """
-    # Find cell with idx, then set crosstie to input True/False value.
-
-    # Return cell_pos_out
-    #
-    # cell_pos is a list of lists of lists, so this function first finds the cell
-    # item with the indicated idx
-
-    Parameters
-    ----------
-    cell_pos_in : List
-        List of lists of lists containing the electrical circuit architecture for
-        a PVMM PV module with indices and cross tie information.
-    idx : int
-        Index for which Crosstie needs to be set to value_crosstie in the cell_pos.
-    value_crosstie : Boolean, optional
-        Flag indicating whether to set the crossite of idx to True or False.
-        The default is True.
-
-    Returns
-    -------
-    cell_pos_out : List
-        List of lists of lists containing the electrical circuit architecture for
-        a PVMM PV module with indices and cross tie information. The crossties
-        are updated based on input.
-
-    """
-    cell_pos_out = cell_pos_in.copy()
-
-    for i, substr in enumerate(cell_pos_in):  # each substring
-        # each column of cells in substring
-        for j, cell_col in enumerate(substr):
-            for k, cell in enumerate(cell_col):  # each cell
-                cell_pos_out[i][j][k]['crosstie'] = value_crosstie
-
-    return cell_pos_out
-
-
 def set_idx(cell_pos_in, idx, value_crosstie=True):
     """
     # Find cell with idx, then set crosstie to input True/False value.
 
     # Return cell_pos_out
     #
-    # cell_pos is a list of lists of lists, so this function first finds the cell
-    # item with the indicated idx
+    # cell_pos is a list of lists of lists, so this function first finds the
+    # cell item with the indicated idx
 
     Parameters
     ----------
     cell_pos_in : List
-        List of lists of lists containing the electrical circuit architecture for
+        List of lists of lists containing the electric circuit architecture for
         a PVMM PV module with indices and cross tie information.
     idx : int
-        Index for which Crosstie needs to be set to value_crosstie in the cell_pos.
+        Index for which Crosstie needs to be set to value_crosstie in cell_pos.
     value_crosstie : Boolean, optional
         Flag indicating whether to set the crossite of idx to True or False.
         The default is True.
@@ -1241,7 +1242,7 @@ def set_idx(cell_pos_in, idx, value_crosstie=True):
     Returns
     -------
     cell_pos_out : List
-        List of lists of lists containing the electrical circuit architecture for
+        List of lists of lists containing the electric circuit architecture for
         a PVMM PV module with indices and cross tie information. The crossties
         are updated based on input.
 
