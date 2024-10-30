@@ -20,12 +20,14 @@ def plot_mod_idx(mods_sys_dict):
     """
     Generate the plot for the module index.
 
-    The plot is created in a "module_index" folder in the current working directory.
+    The plot is created in a "module_index" folder in the current working
+    directory.
 
     Parameters
     ----------
     mods_sys_dict : dict
-        Dictionary containing the physical and electrical models of modules in the simulation.
+        Dictionary containing the physical and electrical models of modules in
+        the simulation.
 
     Returns
     -------
@@ -47,7 +49,8 @@ def plot_mod_idx(mods_sys_dict):
         for cell_name in cell_mod_keys:
             orient_keys = list(mods_sys_dict[mod_name][cell_name].keys())
             for orient in orient_keys:
-                ec_keys = list(mods_sys_dict[mod_name][cell_name][orient].keys())
+                ec_keys = list(
+                    mods_sys_dict[mod_name][cell_name][orient].keys())
                 for ec_type in ec_keys:
                     # Create title for plot
                     plot_label = mods_sys_dict[mod_name][cell_name][orient][ec_type]['Sim_info']['plot_label']
@@ -98,18 +101,21 @@ def print_idx_map(idx_map, idx_crosstie=None):
     return s
 
 
-def plot_shade_module(maxsys_dict, df_shd_sce, plot_file='Module_Shade_Scenarios.pdf', plot_show=False):
+def plot_shade_module(maxsys_dict, df_shd_sce,
+                      plot_file='Module_Shade_Scenarios.pdf', plot_show=False):
     """
-    Generate PDF file containing plots of all scenarios for each module in the simulation.
+    Generate PDF containing plots of all scenarios for each module in sim.
 
     Parameters
     ----------
     mods_sys_dict : dict
-        Dictionary containing the physical and electrical models of modules in the simulation.
+        Dictionary containing the physical and electrical models of modules in
+        the simulation.
     df_shd_sce : pandas.DataFrame
         Dataframe containing the shading scenarios information.
     plot_file : str, optional
-        File path of plotting file. The default is 'Module_Shade_Scenarios.pdf'.
+        File path of plotting file.
+        The default is 'Module_Shade_Scenarios.pdf'.
     plot_show : bool, optional
         Display plots while running. The default is False.
 
@@ -223,7 +229,8 @@ def plot_shade_array(df_shd_sce, plot_label, is_Landscape):
     os.chdir(cw)
 
 
-def rand_cmap(nlabels, type='bright', first_color_black=True, last_color_black=False, verbose=True):
+def rand_cmap(nlabels, type='bright', first_color_black=True,
+              last_color_black=False, verbose=True):
     """
     Create a random colormap to be used together with matplotlib.
 
@@ -232,7 +239,7 @@ def rand_cmap(nlabels, type='bright', first_color_black=True, last_color_black=F
     :param type: 'bright' for strong colors, 'soft' for pastel colors
     :param first_color_black: Option to use first color as black, True or False
     :param last_color_black: Option to use last color as black, True or False
-    :param verbose: Prints the number of labels and shows the colormap. True or False
+    :param verbose: Prints number of labels and shows colormap. True or False
     :return: colormap for matplotlib
     """
     # from matplotlib.colors import LinearSegmentedColormap
@@ -264,8 +271,6 @@ def rand_cmap(nlabels, type='bright', first_color_black=True, last_color_black=F
         if last_color_black:
             randRGBcolors[-1] = [0, 0, 0]
 
-        # random_colormap = LinearSegmentedColormap.from_list('new_map', randRGBcolors, N=nlabels)
-
     # Generate soft pastel colors, by limiting the RGB spectrum
     if type == 'soft':
         low = 0.6
@@ -279,19 +284,6 @@ def rand_cmap(nlabels, type='bright', first_color_black=True, last_color_black=F
 
         if last_color_black:
             randRGBcolors[-1] = [0, 0, 0]
-        # random_colormap = LinearSegmentedColormap.from_list('new_map', randRGBcolors, N=nlabels)
-
-    # Display colorbar
-    # if verbose:
-    #     from matplotlib import colors, colorbar
-    #     from matplotlib import pyplot as plt
-    #     fig, ax = plt.subplots(1, 1, figsize=(15, 0.5))
-
-    #     bounds = np.linspace(0, nlabels, nlabels + 1)
-    #     norm = colors.BoundaryNorm(bounds, nlabels)
-
-    #     cb = colorbar.ColorbarBase(ax, cmap=random_colormap, norm=norm, spacing='proportional', ticks=None,
-    #                                boundaries=bounds, format='%1i', orientation=u'horizontal')
 
     return randRGBcolors
 
@@ -365,17 +357,20 @@ def gen_sing_mod_shade_type_plots(dfCases, plot_show=False):
                             '_NumModsShade_' + str(num_mod) + '.pdf'
                         with PdfPages(plot_file) as pdf:
                             new_cmap = rand_cmap(
-                                sub_sub_df.shape[0], type='bright', first_color_black=True, last_color_black=False,
+                                sub_sub_df.shape[0], type='bright',
+                                first_color_black=True, last_color_black=False,
                                 verbose=True)
                             # Plot IV & PV
                             shd_typg = 'Mixed'
                             pdf = plot_iv_pv_curves(pdf, sub_sub_df, shd_typg,
                                                     plot_label,
-                                                    num_mod, plot_show, new_cmap)
+                                                    num_mod, plot_show,
+                                                    new_cmap)
                             # Plot Power Change & Pmp
                             pdf = plot_PC_Pmp_single(pdf, sub_sub_df, shd_typg,
                                                      plot_label,
-                                                     num_mod, plot_show, newpath)
+                                                     num_mod, plot_show,
+                                                     newpath)
                             # Generate IV & PV Curves for high counts cases
                             for shd_typg in shade_type_great:
                                 sub_sub_df = sub_df2[(sub_df2['Shade Type'] == shd_typg) | (
@@ -383,27 +378,49 @@ def gen_sing_mod_shade_type_plots(dfCases, plot_show=False):
                                 sub_sub_df['Shade Type Var'] = sub_sub_df['Shade Type'] + \
                                     ' | ' + sub_sub_df['Shade Variation']
                                 new_cmap = rand_cmap(
-                                    sub_sub_df.shape[0], type='bright', first_color_black=True, last_color_black=False,
+                                    sub_sub_df.shape[0], type='bright',
+                                    first_color_black=True,
+                                    last_color_black=False,
                                     verbose=True)
                                 # Plot IV & PV
-                                pdf = plot_iv_pv_curves(pdf, sub_sub_df, shd_typg,
+                                pdf = plot_iv_pv_curves(pdf, sub_sub_df,
+                                                        shd_typg,
                                                         plot_label,
-                                                        num_mod, plot_show, new_cmap)
+                                                        num_mod, plot_show,
+                                                        new_cmap)
                                 # Plot Power Change & Pmp
-                                pdf = plot_PC_Pmp_single(pdf, sub_sub_df, shd_typg,
+                                pdf = plot_PC_Pmp_single(pdf, sub_sub_df,
+                                                         shd_typg,
                                                          plot_label,
-                                                         num_mod, plot_show, newpath)
+                                                         num_mod, plot_show,
+                                                         newpath)
                                 sub_sub_df = sub_df2[(
                                     sub_df2['Shade Type'] == shd_typg)]
                                 sss_df_idx = sub_sub_df.index.tolist()
-                                sss_avg = sub_sub_df[['Mod. Shade %', 'Pmp [W]', 'Vmp [V]', 'Imp [A]',
-                                                      'Voc [V]', 'Isc [A]', 'FF', 'Power change [%]']].median(axis=0)
-                                sss_min = sub_sub_df[['Mod. Shade %', 'Pmp [W]', 'Vmp [V]', 'Imp [A]',
-                                                      'Voc [V]', 'Isc [A]', 'FF', 'Power change [%]']].min(axis=0)
-                                sss_max = sub_sub_df[['Mod. Shade %', 'Pmp [W]', 'Vmp [V]', 'Imp [A]',
-                                                      'Voc [V]', 'Isc [A]', 'FF', 'Power change [%]']].max(axis=0)
-                                df_new_row = pd.DataFrame(data=[[mod_name, cell_name, orientation, acdc, plot_label,
-                                                                 num_mod, sub_sub_df['Shade Definition'][sss_df_idx[0]],
+                                sss_avg = sub_sub_df[['Mod. Shade %',
+                                                      'Pmp [W]', 'Vmp [V]',
+                                                      'Imp [A]',
+                                                      'Voc [V]', 'Isc [A]',
+                                                      'FF',
+                                                      'Power change [%]']].median(axis=0)
+                                sss_min = sub_sub_df[['Mod. Shade %',
+                                                      'Pmp [W]', 'Vmp [V]',
+                                                      'Imp [A]',
+                                                      'Voc [V]', 'Isc [A]',
+                                                      'FF',
+                                                      'Power change [%]']].min(axis=0)
+                                sss_max = sub_sub_df[['Mod. Shade %',
+                                                      'Pmp [W]', 'Vmp [V]',
+                                                      'Imp [A]',
+                                                      'Voc [V]', 'Isc [A]',
+                                                      'FF', 'Power change [%]']].max(axis=0)
+                                df_new_row = pd.DataFrame(data=[[mod_name,
+                                                                 cell_name,
+                                                                 orientation,
+                                                                 acdc,
+                                                                 plot_label,
+                                                                 num_mod,
+                                                                 sub_sub_df['Shade Definition'][sss_df_idx[0]],
                                                                  sub_sub_df['Shade Type'][sss_df_idx[0]
                                                                                           ], 'Agg. Avg.',
                                                                  (sss_min['Mod. Shade %'] +
@@ -440,7 +457,7 @@ def gen_sing_mod_shade_type_plots(dfCases, plot_show=False):
 
 def gen_all_mods_num_shd_plots(dfCases, plot_show=False):
     """
-    Generate bar plots for all modules in the same plot, grouping shade scenarios together.
+    Generate bar plots for all mods in same plot, grouping scenarios together.
 
     Parameters
     ----------
@@ -505,8 +522,9 @@ def gen_all_mods_num_shd_plots(dfCases, plot_show=False):
                     ' | ' + sub_sub_df['Shade Variation']
                 # Plot Power Change & Pmp
                 pdf = plot_PC_Pmp_all(
-                    pdf, sub_sub_df, shd_typg, num_mod, plot_show, leg_file=leg_file)
-                # Calculate Averages of Hi count cases and plot wil low count cases
+                    pdf, sub_sub_df, shd_typg, num_mod, plot_show,
+                    leg_file=leg_file)
+                # Calculate avgs of Hi count cases and plot wil low count cases
                 for mod_name in mod_names:
                     sss_df = sub_sub_df[sub_sub_df['Module'] == mod_name]
                     cell_names = sss_df['Cell Name'].unique()
@@ -555,14 +573,15 @@ def gen_all_mods_num_shd_plots(dfCases, plot_show=False):
                                                                  ]
                                                                 ], columns=col_list)
                                 sub_sub_df_all = pd.concat(
-                                    [sub_sub_df_all, df_new_row], ignore_index=True)
+                                    [sub_sub_df_all, df_new_row],
+                                    ignore_index=True)
                 sub_sub_df_all['Shade Type Var'] = sub_sub_df_all['Shade Type'] + \
                     ' | ' + sub_sub_df_all['Shade Variation']
                 # Plot Power Change & Pmp
                 shd_typg = 'Mixed'
                 pdf = plot_PC_Pmp_all(
-                    pdf, sub_sub_df_all, shd_typg, num_mod, plot_show, leg_file=leg_file)
-                # pdf = plot_PC_box_all(pdf, sub_df, shd_typg, num_mod, plot_show, leg_file = leg_file)
+                    pdf, sub_sub_df_all, shd_typg, num_mod, plot_show,
+                    leg_file=leg_file)
 
 
 def plot_iv_pv_curves(pdf, sub_sub_df, shd_typg, plot_label,
@@ -703,8 +722,6 @@ def plot_PC_Pmp_single(pdf, sub_sub_df, shd_typg, plot_label,
     pdf.savefig()
     if not plot_show:
         plt.close()
-    # dfi.export(sub_sub_df[['Plot Label', 'Shade Type', 'Shade Variation', 'Power change [%]']],
-    #         newpath + '\\' + shd_typg + ' Power Change ' + plot_label + ' Num Mods Shaded ' +  str(num_mod) + '.png')
     # Plot Pmp
     titl_txt = shd_typg + ' Pmp ' + plot_label + \
         ' Num Mods Shaded ' + str(num_mod)
@@ -715,8 +732,6 @@ def plot_PC_Pmp_single(pdf, sub_sub_df, shd_typg, plot_label,
     pdf.savefig()
     if not plot_show:
         plt.close()
-    # dfi.export(sub_sub_df[['Plot Label', 'Shade Type', 'Shade Variation', 'Pmp [W]']],
-    #            newpath + '\\' + shd_typg + ' Pmp ' + plot_label + ' Num Mods Shaded ' +  str(num_mod) + '.png')
     return pdf
 
 
@@ -764,9 +779,10 @@ def plot_PC_Box_single(pdf, sub_sub_df, shd_typg, plot_label,
     return pdf
 
 
-def plot_PC_Pmp_all(pdf, sub_sub_df, shd_typg, num_mod, plot_show, show_legend=False, leg_file='legend.png'):
+def plot_PC_Pmp_all(pdf, sub_sub_df, shd_typg, num_mod, plot_show,
+                    show_legend=False, leg_file='legend.png'):
     """
-    Generate the Pmp bar plots for grouped shade scenarios for all modules in one plot.
+    Generate Pmp bar plots for grouped scenarios for all modules in one plot.
 
     Parameters
     ----------
@@ -799,7 +815,6 @@ def plot_PC_Pmp_all(pdf, sub_sub_df, shd_typg, num_mod, plot_show, show_legend=F
     sns.barplot(data=copy_sub_sub_df, x="Shade Type Var",
                 y="Power change [%]", hue="Plot Label", palette="Set2")
     plt.xticks(fontsize=6, rotation=90)
-    #plt.ylim([-105, 0])
     plt.title(titl_txt, fontsize=8)
     if show_legend:
         plt.legend(fontsize=5)
@@ -833,9 +848,10 @@ def plot_PC_Pmp_all(pdf, sub_sub_df, shd_typg, num_mod, plot_show, show_legend=F
     return pdf
 
 
-def plot_PC_box_all(pdf, sub_df, shd_typg, num_mod, plot_show, show_legend=False, leg_file='legend.png'):
+def plot_PC_box_all(pdf, sub_df, shd_typg, num_mod, plot_show,
+                    show_legend=False, leg_file='legend.png'):
     """
-    Generate the Pmp box plots for grouped shade scenarios for all modules in one plot.
+    Generate Pmp box plots for grouped scenarios for all modules in one plot.
 
     Parameters
     ----------
@@ -871,7 +887,6 @@ def plot_PC_box_all(pdf, sub_df, shd_typg, num_mod, plot_show, show_legend=False
     sns.boxplot(data=copy_sub_sub_df, x="Shade Type",
                 y="Power change [%]", hue="Plot Label", palette="Set2")
     plt.xticks(fontsize=6, rotation=90)
-    # plt.ylim([-105, 0])
     plt.title(titl_txt, fontsize=8)
     if show_legend:
         plt.legend(fontsize=5)

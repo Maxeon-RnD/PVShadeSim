@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pvshadesim"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
   { name="Kiran Balasubramanian", email="kiran.balasubramanian@maxeon.com" },
 ]
@@ -21,6 +21,7 @@ classifiers = [
 dependencies = [
   "numpy",
   "pandas",
+  "openpyxl",
   "v_pvmismatch",
   "shapely",
   "matplotlib",

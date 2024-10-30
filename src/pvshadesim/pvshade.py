@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Generate the physical and cell level irradiance levels of the shading and system."""
+"""Generate physical and cell level irradiance levels of shading and system."""
 
 import os
 from pathlib import Path
 import ast
-from random import randrange
+from random import randrange, uniform
 import itertools
 import random
 import re
@@ -22,12 +22,12 @@ from .plotting import plot_shade_module, plot_shade_array
 def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                         gen_sh_sce=False, gen_sh_arr=False):
     """
-    Generate all shade scenarios in the simulations. If required, plot them too.
+    Generate all shade scenarios in simulations. If required, plot them too.
 
     Parameters
     ----------
     mods_sys_dict : dict
-        Dictionary containing the physical and electrical models of modules in the simulation.
+        Dict containing physical and electric models of modules in simulation.
     pvshade_params : pandas.DataFrame
         Dataframe containing the PV shade database.
     search_idx_name : str
@@ -35,12 +35,14 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
     gen_sh_sce : bool, optional
         Generate plot of shade scenarios? The default is False.
     gen_sh_arr : bool, optional
-        Generate plot of cell intersection arrays with shade scenarios. The default is False.
+        Generate plot of cell intersection arrays with shade scenarios.
+        The default is False.
 
     Returns
     -------
     mods_sys_dict : dict
-        Dictionary containing the physical and electrical models of modules in the simulation + shading data.
+        Dict containing the physical and electrical models of modules in the
+        simulation + shading data.
 
     """
     # Get current working directory (old)
@@ -50,7 +52,8 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
     if not os.path.exists(newpath):
         os.makedirs(newpath)
 
-    col_list = ['Scenario Definition', 'Scenario Type', 'Scenario Variation', 'Shade Array', 'Shade Polygon',
+    col_list = ['Scenario Definition', 'Scenario Type', 'Scenario Variation',
+                'Shade Array', 'Shade Polygon',
                 'Module Shaded Area', 'Module Shaded Area Percentage'
                 ]
     wp_cnt = 0
@@ -74,7 +77,9 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                                      np.zeros((maxsys_dict['Physical_Info']['Cell_Coordinates'].shape[0],
                                                                maxsys_dict['Physical_Info']['Cell_Coordinates'].shape[1])),
                                                      create_rectangle(
-                                                         (-10000, -10000), 1e-3, 1e-3, rot_ang=0),
+                                                         (-10000, -10000),
+                                                         1e-3, 1e-3,
+                                                         rot_ang=0),
                                                      0,
                                                      0
                                                      ]], columns=col_list)
@@ -100,8 +105,11 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                 shd_cell_prop_lst = ast.literal_eval(
                                     sub_df.loc['shade_cell_prop', [scen]][0])
                                 shd_cell_prop = np.arange(
-                                    shd_cell_prop_lst[0], shd_cell_prop_lst[1]+1e-3, shd_cell_prop_lst[2])
-                                shd_cell_idx = sub_df.loc['shade_cell_idx', [scen]][0]
+                                    shd_cell_prop_lst[0],
+                                    shd_cell_prop_lst[1]+1e-3,
+                                    shd_cell_prop_lst[2])
+                                shd_cell_idx = sub_df.loc['shade_cell_idx',
+                                                          [scen]][0]
                                 translucence = float(
                                     sub_df.loc['translucence', [scen]][0])
                                 dir_diff_ratio = float(
@@ -111,11 +119,13 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                     shd_dir = 'Y'
                                 # Generate shade case
                                 df_shd_sce = shade_1cell(
-                                    maxsys_dict, df_shd_sce, shd_cell_prop, shd_cell_idx, shd_dir,
+                                    maxsys_dict, df_shd_sce, shd_cell_prop,
+                                    shd_cell_idx, shd_dir,
                                     translucence, dir_diff_ratio)
                             elif func_name == 'ncells':
                                 # Extract info
-                                num_cells = int(sub_df.loc['num_obj', [scen]][0])
+                                num_cells = int(sub_df.loc['num_obj',
+                                                           [scen]][0])
                                 shd_cell_idx = ast.literal_eval(
                                     sub_df.loc['shade_cell_idx', [scen]][0])
                                 translucence = float(
@@ -123,16 +133,25 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
                                 # Generate shade case
-                                df_shd_sce = shade_ncells(maxsys_dict, df_shd_sce, num_cells,
+                                df_shd_sce = shade_ncells(maxsys_dict,
+                                                          df_shd_sce,
+                                                          num_cells,
                                                           shd_cell_idx_lst=shd_cell_idx,
-                                                          translucence=translucence, dir_diff_ratio=dir_diff_ratio)
+                                                          translucence=translucence,
+                                                          dir_diff_ratio=dir_diff_ratio)
                             elif func_name == 'substring':
                                 # Extract info
-                                substr_diodes = ast.literal_eval(sub_df.loc['shade_cell_idx', [scen]][0])
-                                mod_prop_vec = ast.literal_eval(sub_df.loc['shade_mod_prop', [scen]][0])
-                                translucence = float(sub_df.loc['translucence', [scen]][0])
-                                dir_diff_ratio = float(sub_df.loc['dir_diff_ratio', [scen]][0])
-                                df_shd_sce = shade_substr_per_diode(maxsys_dict, df_shd_sce, substr_diodes,
+                                substr_diodes = ast.literal_eval(sub_df.loc['shade_cell_idx',
+                                                                            [scen]][0])
+                                mod_prop_vec = ast.literal_eval(sub_df.loc['shade_mod_prop',
+                                                                           [scen]][0])
+                                translucence = float(sub_df.loc['translucence',
+                                                                [scen]][0])
+                                dir_diff_ratio = float(sub_df.loc['dir_diff_ratio',
+                                                                  [scen]][0])
+                                df_shd_sce = shade_substr_per_diode(maxsys_dict,
+                                                                    df_shd_sce,
+                                                                    substr_diodes,
                                                                     mod_prop_vec=mod_prop_vec,
                                                                     translucence=translucence,
                                                                     dir_diff_ratio=dir_diff_ratio)
@@ -151,9 +170,15 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                 use_std = sub_df.loc['use_std', [scen]][0]
                                 pickle_fn = sub_df.loc['pickle_file', [
                                     scen]][0]
-                                df_shd_sce = shade_leaves_birddroppings(maxsys_dict, df_shd_sce, num_obj,
-                                                                        maj_dia, min_dia, rot_ang,
-                                                                        translucence, dir_diff_ratio, use_std,
+                                df_shd_sce = shade_leaves_birddroppings(maxsys_dict,
+                                                                        df_shd_sce,
+                                                                        num_obj,
+                                                                        maj_dia,
+                                                                        min_dia,
+                                                                        rot_ang,
+                                                                        translucence,
+                                                                        dir_diff_ratio,
+                                                                        use_std,
                                                                         pickle_fn)
                             elif func_name == 'row' or func_name == 'col':
                                 rowcol_type = sub_df.loc['rowcol_type', [
@@ -165,9 +190,14 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
                                 cen_pt = sub_df.loc['cen_pt', [scen]][0]
-                                df_shd_sce = shade_row_col(maxsys_dict, df_shd_sce, func_name, rowcol_type,
+                                df_shd_sce = shade_row_col(maxsys_dict,
+                                                           df_shd_sce,
+                                                           func_name,
+                                                           rowcol_type,
                                                            mod_prop_vec,
-                                                           translucence, dir_diff_ratio, cen_pt)
+                                                           translucence,
+                                                           dir_diff_ratio,
+                                                           cen_pt)
                             elif func_name == 'bottom_edge_soiling_row' or func_name == 'bottom_edge_soiling_col':
                                 rowcol_type = sub_df.loc['rowcol_type', [
                                     scen]][0]
@@ -179,9 +209,13 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                     sub_df.loc['translucence', [scen]][0])
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
-                                df_shd_sce = bottom_edge_soiling(maxsys_dict, df_shd_sce, bes_shape='rectangle',
-                                                                 mod_prop_vec=mod_prop_vec, translucence=translucence,
-                                                                 dir_diff_ratio=dir_diff_ratio, shd_type=shd_type,
+                                df_shd_sce = bottom_edge_soiling(maxsys_dict,
+                                                                 df_shd_sce,
+                                                                 bes_shape='rectangle',
+                                                                 mod_prop_vec=mod_prop_vec,
+                                                                 translucence=translucence,
+                                                                 dir_diff_ratio=dir_diff_ratio,
+                                                                 shd_type=shd_type,
                                                                  rowcol_type=rowcol_type)
                             elif func_name == 'bottom_edge_soiling_row_singtriang' or func_name == 'bottom_edge_soiling_col_singtriang':
                                 rowcol_type = sub_df.loc['rowcol_type', [
@@ -195,9 +229,13 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                     sub_df.loc['translucence', [scen]][0])
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
-                                df_shd_sce = bottom_edge_soiling(maxsys_dict, df_shd_sce, bes_shape='single_triangle',
-                                                                 mod_prop_vec=mod_prop_vec, translucence=translucence,
-                                                                 dir_diff_ratio=dir_diff_ratio, shd_type=shd_type,
+                                df_shd_sce = bottom_edge_soiling(maxsys_dict,
+                                                                 df_shd_sce,
+                                                                 bes_shape='single_triangle',
+                                                                 mod_prop_vec=mod_prop_vec,
+                                                                 translucence=translucence,
+                                                                 dir_diff_ratio=dir_diff_ratio,
+                                                                 shd_type=shd_type,
                                                                  rowcol_type=rowcol_type)
                             elif func_name == 'bottom_edge_soiling_row_doubtriang' or func_name == 'bottom_edge_soiling_col_doubtriang':
                                 rowcol_type = sub_df.loc['rowcol_type', [
@@ -211,7 +249,9 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                     sub_df.loc['translucence', [scen]][0])
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
-                                df_shd_sce = bottom_edge_soiling(maxsys_dict, df_shd_sce, bes_shape='double_triangle',
+                                df_shd_sce = bottom_edge_soiling(maxsys_dict,
+                                                                 df_shd_sce,
+                                                                 bes_shape='double_triangle',
                                                                  mod_prop_vec=mod_prop_vec, translucence=translucence,
                                                                  dir_diff_ratio=dir_diff_ratio, shd_type=shd_type,
                                                                  rowcol_type=rowcol_type)
@@ -236,24 +276,34 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                 cen_pt = sub_df.loc['cen_pt', [scen]][0]
                                 if '[' in cen_pt:
                                     cen_pt = ast.literal_eval(cen_pt)
-                                df_shd_sce, sh_width_vec = shade_rot_rectangle(maxsys_dict, df_shd_sce, rot_ang_vec,
-                                                                               sh_width_vec, translucence,
-                                                                               dir_diff_ratio, use_std, pickle_fn,
-                                                                               func_name, cen_pt)
+                                df_shd_sce, sh_width_vec = shade_rot_rectangle(maxsys_dict,
+                                                                               df_shd_sce,
+                                                                               rot_ang_vec,
+                                                                               sh_width_vec,
+                                                                               translucence,
+                                                                               dir_diff_ratio,
+                                                                               use_std,
+                                                                               pickle_fn,
+                                                                               func_name,
+                                                                               cen_pt)
                                 if func_name == 'Wire Pole' and wp_cnt == 0:
                                     width_lst = ['Width {}'.format(
-                                        i) for i in range(1, len(sh_width_vec)+1)]
+                                        i) for i in range(1,
+                                                          len(sh_width_vec)+1)]
                                     wp_wid_col_list = [
-                                        'Module', 'Cell', 'Orientation'] + width_lst
+                                        'Module', 'Cell',
+                                        'Orientation'] + width_lst
                                     wire_pole_df = pd.DataFrame(
                                         columns=wp_wid_col_list)
                                     wp_cnt += 1
 
                                 if func_name == 'Chimney' and ch_cnt == 0:
                                     width_lst = ['Width {}'.format(
-                                        i) for i in range(1, len(sh_width_vec)+1)]
+                                        i) for i in range(1,
+                                                          len(sh_width_vec)+1)]
                                     ch_wid_col_list = [
-                                        'Module', 'Cell', 'Orientation'] + width_lst
+                                        'Module', 'Cell',
+                                        'Orientation'] + width_lst
                                     chimney_pole_df = pd.DataFrame(
                                         columns=ch_wid_col_list)
                                     ch_cnt += 1
@@ -265,7 +315,8 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                                                      ] + sh_width_vec.tolist()],
                                                               columns=wp_wid_col_list)
                                     wire_pole_df = pd.concat(
-                                        [wire_pole_df, df_new_row], ignore_index=True)
+                                        [wire_pole_df, df_new_row],
+                                        ignore_index=True)
 
                                 else:
                                     df_new_row = pd.DataFrame(data=[[mod_name,
@@ -274,7 +325,8 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                                                      ] + sh_width_vec.tolist()],
                                                               columns=ch_wid_col_list)
                                     chimney_pole_df = pd.concat(
-                                        [chimney_pole_df, df_new_row], ignore_index=True)
+                                        [chimney_pole_df, df_new_row],
+                                        ignore_index=True)
 
                             elif func_name == 'Pipe':
                                 rot_ang = ast.literal_eval(
@@ -284,10 +336,14 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                 # print(rot_ang_vec)
                                 sh_len = ast.literal_eval(
                                     sub_df.loc['x_len', [scen]][0])
-                                if isinstance(sub_df.loc['shade_mod_prop', [scen]][0], (int, float)):
-                                    use_len = sub_df.loc['shade_mod_prop', [scen]][0]
+                                if isinstance(sub_df.loc['shade_mod_prop',
+                                                         [scen]][0],
+                                              (int, float)):
+                                    use_len = sub_df.loc['shade_mod_prop',
+                                                         [scen]][0]
                                 else:
-                                    use_len = ast.literal_eval(sub_df.loc['shade_mod_prop', [scen]][0])
+                                    use_len = ast.literal_eval(sub_df.loc['shade_mod_prop',
+                                                                          [scen]][0])
                                 if use_len:
                                     sh_len_vec = np.arange(
                                         sh_len[0], sh_len[1]+1, sh_len[2])
@@ -308,24 +364,36 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                 cen_pt = sub_df.loc['cen_pt', [scen]][0]
                                 if '[' in cen_pt:
                                     cen_pt = ast.literal_eval(cen_pt)
-                                df_shd_sce, sh_width_vec = shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec,
-                                                                      sh_width_vec, sh_len_vec, translucence,
-                                                                      dir_diff_ratio, use_std, use_len, pickle_fn,
-                                                                      func_name, cen_pt)
+                                df_shd_sce, sh_width_vec = shade_pipe(maxsys_dict,
+                                                                      df_shd_sce,
+                                                                      rot_ang_vec,
+                                                                      sh_width_vec,
+                                                                      sh_len_vec,
+                                                                      translucence,
+                                                                      dir_diff_ratio,
+                                                                      use_std,
+                                                                      use_len,
+                                                                      pickle_fn,
+                                                                      func_name,
+                                                                      cen_pt)
                                 if vp_cnt == 0:
                                     width_lst = ['Width {}'.format(
-                                        i) for i in range(1, len(sh_width_vec)+1)]
+                                        i) for i in range(1,
+                                                          len(sh_width_vec)+1)]
                                     wid_col_list = [
-                                        'Module', 'Cell', 'Orientation'] + width_lst
+                                        'Module', 'Cell',
+                                        'Orientation'] + width_lst
                                     pipe_pole_df = pd.DataFrame(
                                         columns=wid_col_list)
                                     vp_cnt += 1
                                 df_new_row = pd.DataFrame(data=[[mod_name,
                                                                  cell_name,
                                                                  orient
-                                                                 ] + sh_width_vec.tolist()], columns=wid_col_list)
+                                                                 ] + sh_width_vec.tolist()],
+                                                          columns=wid_col_list)
                                 pipe_pole_df = pd.concat(
-                                    [pipe_pole_df, df_new_row], ignore_index=True)
+                                    [pipe_pole_df, df_new_row],
+                                    ignore_index=True)
 
                             elif func_name == 'mixed1':
                                 translucence = float(
@@ -333,21 +401,24 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
                                 df_shd_sce = shade_mixed1(
-                                    maxsys_dict, df_shd_sce, translucence, dir_diff_ratio)
+                                    maxsys_dict, df_shd_sce, translucence,
+                                    dir_diff_ratio)
                             elif func_name == 'mixed2':
                                 translucence = float(
                                     sub_df.loc['translucence', [scen]][0])
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
                                 df_shd_sce = shade_mixed2(
-                                    maxsys_dict, df_shd_sce, translucence, dir_diff_ratio)
+                                    maxsys_dict, df_shd_sce, translucence,
+                                    dir_diff_ratio)
                             elif func_name == 'tree1':
                                 translucence = float(
                                     sub_df.loc['translucence', [scen]][0])
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
                                 df_shd_sce = shade_tree1(
-                                    maxsys_dict, df_shd_sce, translucence, dir_diff_ratio)
+                                    maxsys_dict, df_shd_sce, translucence,
+                                    dir_diff_ratio)
                             elif func_name == 'tree2':
                                 rot_ang = ast.literal_eval(
                                     sub_df.loc['rot_ang', [scen]][0])
@@ -358,9 +429,11 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                     sub_df.loc['translucence', [scen]][0])
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
-                                df_shd_sce = shade_tree2(maxsys_dict, df_shd_sce,
+                                df_shd_sce = shade_tree2(maxsys_dict,
+                                                         df_shd_sce,
                                                          rot_ang, cen_pt,
-                                                         translucence, dir_diff_ratio)
+                                                         translucence,
+                                                         dir_diff_ratio)
                             elif func_name == 'tree3':
                                 rot_ang = ast.literal_eval(
                                     sub_df.loc['rot_ang', [scen]][0])
@@ -371,9 +444,11 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                     sub_df.loc['translucence', [scen]][0])
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
-                                df_shd_sce = shade_tree3(maxsys_dict, df_shd_sce,
+                                df_shd_sce = shade_tree3(maxsys_dict,
+                                                         df_shd_sce,
                                                          rot_ang, cen_pt,
-                                                         translucence, dir_diff_ratio)
+                                                         translucence,
+                                                         dir_diff_ratio)
                             elif func_name == 'user_defined':
                                 obj_shape = ast.literal_eval(
                                     sub_df.loc['shade_mod_prop', [scen]][0])
@@ -389,12 +464,21 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                     sub_df.loc['translucence', [scen]][0])
                                 dir_diff_ratio = float(
                                     sub_df.loc['dir_diff_ratio', [scen]][0])
-                                scen_name = sub_df.loc['scenario_type', [scen]][0]
-                                df_shd_sce = shade_user_define_objects(maxsys_dict, df_shd_sce, cen_pt, x_len,
-                                                                       y_len, rot_ang, obj_shape,
-                                                                       translucence, dir_diff_ratio, scen_name)
+                                scen_name = sub_df.loc['scenario_type',
+                                                       [scen]][0]
+                                df_shd_sce = shade_user_define_objects(maxsys_dict,
+                                                                       df_shd_sce,
+                                                                       cen_pt,
+                                                                       x_len,
+                                                                       y_len,
+                                                                       rot_ang,
+                                                                       obj_shape,
+                                                                       translucence,
+                                                                       dir_diff_ratio,
+                                                                       scen_name)
                             else:
-                                raise ValueError('No matching shading functions found: ' + func_name)
+                                raise ValueError(
+                                    'No matching shading functions found: ' + func_name)
                     mods_sys_dict[mod_name][cell_name][orient][ec_type]['Shade Scenarios'] = df_shd_sce
                     # Plot Shade Scenarios
                     if gen_sh_sce:
@@ -452,7 +536,8 @@ def create_rectangle(center_pt, xlen, ylen, rot_ang):
                        [np.sin(np.deg2rad(rot_ang)),
                         np.cos(np.deg2rad(rot_ang))]
                        ])
-    # Define vertices of rectangle in rotated dimensions (x', y' coordinate axis)
+    # Define vertices of rectangle in rotated
+    # dimensions (x', y' coordinate axis)
     rect_rot_vert = np.array([[-0.5*xlen, -0.5*xlen,  0.5*xlen,  0.5*xlen],
                               [-0.5*ylen,  0.5*ylen,  0.5*ylen, -0.5*ylen]
                               ])
@@ -468,7 +553,7 @@ def create_rectangle(center_pt, xlen, ylen, rot_ang):
 
 def cell_overlap_area(cell_poly_df, mod_overlap, cell_area_overlap=[]):
     """
-    Calculate the cell overlap area of the shade polygon with all cells in the module.
+    Calculate the cell overlap area of shade polygon with all cells in module.
 
     Parameters
     ----------
@@ -539,7 +624,8 @@ def cell_overlap_area(cell_poly_df, mod_overlap, cell_area_overlap=[]):
                     mx, my = Cellendb.exterior.xy
                     mp3x = mx[3]
                     mp3y = my[3]
-                    cell_str_poly = Polygon([[mp1x, mp1y], [mp0x, mp0y], [mp2x, mp2y],
+                    cell_str_poly = Polygon([[mp1x, mp1y], [mp0x, mp0y],
+                                             [mp2x, mp2y],
                                              [mp3x, mp3y]])
                     if mod_overlap.intersects(cell_str_poly):
                         for idx_col in range(col_rng[0], col_rng[1]+1):
@@ -599,7 +685,8 @@ def cell_overlap_area(cell_poly_df, mod_overlap, cell_area_overlap=[]):
                     mx, my = Cellendb.exterior.xy
                     mp3x = mx[3]
                     mp3y = my[3]
-                    cell_str_poly = Polygon([[mp1x, mp1y], [mp0x, mp0y], [mp2x, mp2y],
+                    cell_str_poly = Polygon([[mp1x, mp1y], [mp0x, mp0y],
+                                             [mp2x, mp2y],
                                              [mp3x, mp3y]])
                     if mod_overlap.intersects(cell_str_poly):
                         for idx_row in range(row_rng[0], row_rng[1]+1):
@@ -646,7 +733,9 @@ def calc_cell_shading(cell_area_overlap, CELLAREA, translucence=1,
     return op_shade_array
 
 
-def shade_1cell(maxsys_dict, df_shd_sce, shd_cell_prop=np.arange(0.2, 1.1, 0.2), shd_cell_idx=[], shd_dir='Y',
+def shade_1cell(maxsys_dict, df_shd_sce,
+                shd_cell_prop=np.arange(0.2, 1.1, 0.2),
+                shd_cell_idx=[], shd_dir='Y',
                 translucence=1,
                 dir_diff_ratio=1):
     """
@@ -659,9 +748,11 @@ def shade_1cell(maxsys_dict, df_shd_sce, shd_cell_prop=np.arange(0.2, 1.1, 0.2),
     df_shd_sce : pandas.DataFrame
         Dataframe containing the shading scenarios information.
     shd_cell_prop : numpy.ndarray, optional
-        Array of cell proportions to shade by. The default is np.arange(0.2, 1.1, 0.2).
+        Array of cell proportions to shade by.
+        The default is np.arange(0.2, 1.1, 0.2).
     shd_cell_idx : int or empty list, optional
-        Index of cell to shade. If empty, a random cell is shaded. The default is [].
+        Index of cell to shade. If empty, a random cell is shaded.
+        The default is [].
     shd_dir : str, optional
         Direction of shading. The default is 'Y'.
     translucence : float, optional
@@ -718,7 +809,8 @@ def shade_1cell(maxsys_dict, df_shd_sce, shd_cell_prop=np.arange(0.2, 1.1, 0.2),
                       cell_coords[shd_row[0], shd_col[0], 0, 1] + 0.5*cell_wid
                       ]
         else:
-            raise ValueError('Incorrect shade direction inputted. Valid inputs: Y, X, MidY, MidX')
+            raise ValueError(
+                'Incorrect shade direction inputted. Valid inputs: Y, X, MidY, MidX')
         # Create shade polygon (Rectangle)
         shd_poly = create_rectangle(shd_cp, shd_len, shd_wid, 0)
         # Check overlap against module
@@ -731,7 +823,8 @@ def shade_1cell(maxsys_dict, df_shd_sce, shd_cell_prop=np.arange(0.2, 1.1, 0.2),
         max_key = max(
             list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
         cell_area_overlap = cell_overlap_area(
-            maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0], mod_overlap)
+            maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0],
+            mod_overlap)
         # Calculate shading matrix
         op_shade_array = calc_cell_shading(
             cell_area_overlap, CELLAREA, translucence, dir_diff_ratio)
@@ -813,7 +906,7 @@ def gen_cells_shd_list(maxsys_dict, num_cells):
 
 def gen_idx_list(cell_pos, diode_idx, par_idx):
     """
-    Generate list of cell indices for shading based on diode section and parallel substrings.
+    Generate list of cell idxs for shading based on diode and parallel substr.
 
     Parameters
     ----------
@@ -862,7 +955,8 @@ def remove_old_cells(shd_cell_list, idx_list):
     return idx_list
 
 
-def shade_ncells(maxsys_dict, df_shd_sce, num_cells=2, shd_cell_idx_lst=[], translucence=1,
+def shade_ncells(maxsys_dict, df_shd_sce, num_cells=2, shd_cell_idx_lst=[],
+                 translucence=1,
                  dir_diff_ratio=1):
     """
     Generate full shading of n number of cells.
@@ -947,7 +1041,8 @@ def shade_ncells(maxsys_dict, df_shd_sce, num_cells=2, shd_cell_idx_lst=[], tran
     return df_shd_sce
 
 
-def shade_substr_per_diode(maxsys_dict, df_shd_sce, substr_diodes, mod_prop_vec=[10, 90, 10], translucence=1,
+def shade_substr_per_diode(maxsys_dict, df_shd_sce, substr_diodes,
+                           mod_prop_vec=[10, 90, 10], translucence=1,
                            dir_diff_ratio=1):
     """
     Generate proportional shading of a module substring.
@@ -961,7 +1056,8 @@ def shade_substr_per_diode(maxsys_dict, df_shd_sce, substr_diodes, mod_prop_vec=
     substr_diodes : list
         List specifying which parallel substrings and diode sections to shade.
     mod_prop_vec : list, optional
-        List containing the proportions by which to shade the substring. The default is [10, 90, 10].
+        List containing the proportions by which to shade the substring.
+        The default is [10, 90, 10].
     translucence : float, optional
         Opacity of the shading. The default is 1.
     dir_diff_ratio : float, optional
@@ -979,7 +1075,9 @@ def shade_substr_per_diode(maxsys_dict, df_shd_sce, substr_diodes, mod_prop_vec=
     cell_len_vec = cell_coords[:, :, 3, 0] - cell_coords[:, :, 0, 0]
     cell_wid_vec = cell_coords[:, :, 1, 1] - cell_coords[:, :, 0, 1]
     CELLAREA = cell_len_vec*cell_wid_vec
-    mod_prop_vec = 0.01 * np.arange(mod_prop_vec[0], mod_prop_vec[1]+mod_prop_vec[2], mod_prop_vec[2])
+    mod_prop_vec = 0.01 * np.arange(mod_prop_vec[0],
+                                    mod_prop_vec[1]+mod_prop_vec[2],
+                                    mod_prop_vec[2])
     # Get cell position
     cell_pos = maxsys_dict['Electrical_Circuit']['Cell_Postion']
     num_str = len(cell_pos[0])
@@ -1017,18 +1115,22 @@ def shade_substr_per_diode(maxsys_dict, df_shd_sce, substr_diodes, mod_prop_vec=
                 full_poly.append(shd_poly)
         full_poly = unary_union(full_poly)
         # Check overlap against module
-        mod_overlap = maxsys_dict['Physical_Info']['Module_Polygon'].iloc[-1, 0].intersection(full_poly)
+        mod_overlap = maxsys_dict['Physical_Info']['Module_Polygon'].iloc[-1,
+                                                                          0].intersection(full_poly)
         mod_overlap_area = mod_overlap.area
-        mod_overlap_area_perc = 100*mod_overlap_area / maxsys_dict['Physical_Info']['Module_Polygon'].iloc[-1, 0].area
+        mod_overlap_area_perc = 100*mod_overlap_area / \
+            maxsys_dict['Physical_Info']['Module_Polygon'].iloc[-1, 0].area
         # Calculate overlap area for each cell
         cell_coords = maxsys_dict['Physical_Info']['Cell_Coordinates']
-        max_key = max(list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
+        max_key = max(
+            list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
         cell_area_overlap = cell_overlap_area(maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0],
                                               mod_overlap)
         # Calculate shading matrix
         # Cell dimensions
         CELLAREA = cell_len_vec*cell_wid_vec
-        op_shade_array = calc_cell_shading(cell_area_overlap, CELLAREA, translucence, dir_diff_ratio)
+        op_shade_array = calc_cell_shading(cell_area_overlap, CELLAREA,
+                                           translucence, dir_diff_ratio)
         col_list = list(df_shd_sce.columns.values)
         shd_scn = 'Shade Substring'
         shd_var = 'Substring Proportion ' + str(mod_prop)
@@ -1046,12 +1148,15 @@ def shade_substr_per_diode(maxsys_dict, df_shd_sce, substr_diodes, mod_prop_vec=
 
 
 def shade_leaves_birddroppings(maxsys_dict, df_shd_sce, num_obj=100,
-                               maj_dia=[5, 50], min_dia=[5, 50], rot_ang=[-90, 90], translucence=1,
-                               dir_diff_ratio=1, use_std=True, pickle_fn='Leaves_BirdDroppings_Data.pickle'):
+                               maj_dia=[5, 50], min_dia=[5, 50],
+                               rot_ang=[-90, 90], translucence=1,
+                               dir_diff_ratio=1, use_std=True,
+                               pickle_fn='Leaves_BirdDroppings_Data.pickle'):
     """
     Generate the leaves and bird droppings shade scenario.
 
-    This is achieved by randomly placing N ellipses with varying angles inside the module area.
+    This is achieved by randomly placing N ellipses with varying angles inside
+    the module area.
 
     Parameters
     ----------
@@ -1072,9 +1177,11 @@ def shade_leaves_birddroppings(maxsys_dict, df_shd_sce, num_obj=100,
     dir_diff_ratio : float, optional
         Direct to diffuse irradiance ratio. The default is 1.
     use_std : bool, optional
-        If True, use a standard scenario and scale based on Module dimensions. The default is True.
+        If True, use a standard scenario and scale based on Module dimensions.
+        The default is True.
     pickle_fn : str, optional
-        Name of the standard scenario pickle file. The default is 'Leaves_BirdDroppings_Data.pickle'.
+        Name of the standard scenario pickle file.
+        The default is 'Leaves_BirdDroppings_Data.pickle'.
 
     Returns
     -------
@@ -1091,8 +1198,10 @@ def shade_leaves_birddroppings(maxsys_dict, df_shd_sce, num_obj=100,
             # If not, Generate random data
             cps, xdiams, ydiams, rotangs = gen_rand_coord_data(
                 maxsys_dict, num_obj, maj_dia, min_dia, rot_ang)
-            MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0]
-            MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
+            MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0,
+                                                                    2, 0]
+            MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0,
+                                                                    2, 1]
             leaf_bird_data = [cps, np.asarray(xdiams), np.asarray(
                 ydiams), np.asarray(rotangs), MX, MY]
             save_pickle(pickle_path, leaf_bird_data)
@@ -1201,13 +1310,13 @@ def gen_rand_coord_data(maxsys_dict, num_obj, maj_dia, min_dia, rot_ang):
     rotangs = []
     for idx_cp in range(num_obj):
         # Random major diameter
-        x_diam = randrange(maj_dia[0], maj_dia[1] + 1, 1)
+        x_diam = uniform(maj_dia[0], maj_dia[1] + 1)
         xdiams.append(x_diam)
         # Random minor diameter
-        y_diam = randrange(min_dia[0], min_dia[1] + 1, 1)
+        y_diam = uniform(min_dia[0], min_dia[1] + 1)
         ydiams.append(y_diam)
         # Random rotation angle
-        ra = randrange(rot_ang[0], rot_ang[1] + 1, 1)
+        ra = uniform(rot_ang[0], rot_ang[1] + 1)
         rotangs.append(ra)
     return cps, xdiams, ydiams, rotangs
 
@@ -1232,7 +1341,7 @@ def Random_Points_in_Polygon(polygon, number):
     points = []
     minx, miny, maxx, maxy = polygon.bounds
     while len(points) < number:
-        pnt = Point(randrange(minx, maxx), randrange(miny, maxy))
+        pnt = Point(uniform(minx, maxx), uniform(miny, maxy))
         if polygon.contains(pnt):
             points.append(pnt)
     return points
@@ -1268,10 +1377,11 @@ def create_ellipse(center_pt, x_diam, y_diam, rot_ang):
     return ellipse
 
 
-def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop', mod_prop_vec=[10, 90, 10],
+def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row',
+                  rowcol_type='mod_prop', mod_prop_vec=[10, 90, 10],
                   translucence=1, dir_diff_ratio=1, cen_pt_d='forward'):
     """
-    Generate short edge (row for portrait) or long edge (col for portrait) shading scenario.
+    Generate short (row for portrait) or long edge (col for portrait) shading.
 
     Parameters
     ----------
@@ -1282,17 +1392,20 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
     shd_type : str, optional
         Specify whether it is row or columnwise shading. The default is 'row'.
     rowcol_type : str, optional
-        Specify whether the shading needs to be done cellwise, proportionally or by actual dimensions.
+        Specify whether the shading needs to be done cellwise, proportionally
+        or by actual dimensions.
         The default is 'mod_prop'.
     mod_prop_vec : list, optional
-        List containing the proportions or actual dimensions by which to shade the module. The default is [10, 90, 10].
+        List containing the proportions or actual dimensions by which to shade
+        the module. The default is [10, 90, 10].
     translucence : float, optional
         Opacity of the shading. The default is 1.
     dir_diff_ratio : float, optional
         Direct to diffuse irradiance ratio. The default is 1.
     cen_pt_d : str, optional
         Specify the direction of shading. 'forward' or 'reverse'.
-        'forward' is bottom to top for row, and left to right for col. The default is 'forward'.
+        'forward' is bottom to top for row, and left to right for col.
+        The default is 'forward'.
 
     Returns
     -------
@@ -1316,26 +1429,33 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
             if shd_type == 'row':
                 cen_pt = [
                     0.5 *
-                    maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0],
+                    maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0,
+                                                                       2, 0],
                     0.5*cell_width*(idx_row+1)
                 ]
             elif shd_type == 'col':
                 cen_pt = [
                     0.5*cell_len*(idx_row+1),
                     0.5 *
-                    maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
+                    maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0,
+                                                                       2, 1]
                 ]
             else:
-                raise ValueError('Incorrect shade type. Valid values: row or col.')
+                raise ValueError(
+                    'Incorrect shade type. Valid values: row or col.')
             # Create shade polygon (Rectangle)
             if shd_type == 'row':
                 full_poly = create_rectangle(
                     cen_pt, maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0], cell_width*(idx_row+1), 0)
             elif shd_type == 'col':
                 full_poly = create_rectangle(
-                    cen_pt, cell_len*(idx_row+1), maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1], 0)
+                    cen_pt, cell_len*(idx_row+1),
+                    maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0,
+                                                                       2, 1],
+                    0)
             else:
-                raise ValueError('Incorrect shade type. Valid values: row or col.')
+                raise ValueError(
+                    'Incorrect shade type. Valid values: row or col.')
             # Check overlap against module
             mod_overlap = maxsys_dict['Physical_Info']['Module_Polygon'].iloc[-1,
                                                                               0].intersection(full_poly)
@@ -1346,7 +1466,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
             max_key = max(
                 list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
             cell_area_overlap = cell_overlap_area(
-                maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0], mod_overlap)
+                maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0],
+                mod_overlap)
             # Calculate shading matrix
             op_shade_array = calc_cell_shading(
                 cell_area_overlap, CELLAREA, translucence, dir_diff_ratio)
@@ -1357,7 +1478,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
             elif shd_type == 'col':
                 shd_scn = 'Shade Column'
             else:
-                raise ValueError('Incorrect shade type. Valid values: row or col.')
+                raise ValueError(
+                    'Incorrect shade type. Valid values: row or col.')
             col_list = list(df_shd_sce.columns.values)
             df_new_row = pd.DataFrame(data=[['Standard',
                                              shd_scn,
@@ -1373,7 +1495,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
         MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0]
         MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
         mod_prop_vec = 0.01 * \
-            np.arange(mod_prop_vec[0], mod_prop_vec[1]+mod_prop_vec[2], mod_prop_vec[2])
+            np.arange(mod_prop_vec[0], mod_prop_vec[1]+mod_prop_vec[2],
+                      mod_prop_vec[2])
         for mod_prop in mod_prop_vec:
             mod_prop = round(mod_prop, 3)
             # Define shade coordinates
@@ -1384,14 +1507,16 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
                 shd_x = mod_prop * MX
                 shd_y = MY
             else:
-                raise ValueError('Incorrect shade type. Valid values: row or col.')
+                raise ValueError(
+                    'Incorrect shade type. Valid values: row or col.')
             if cen_pt_d == 'reverse':
                 if shd_type == 'row':
                     cen_pt = [0.5*shd_x, MY - 0.5*shd_y]
                 elif shd_type == 'col':
                     cen_pt = [MX - 0.5*shd_x, 0.5*shd_y]
                 else:
-                    raise ValueError('Incorrect shade type. Valid values: row or col.')
+                    raise ValueError(
+                        'Incorrect shade type. Valid values: row or col.')
             else:
                 cen_pt = [0.5*shd_x, 0.5*shd_y]
             # Create shade polygon (Rectangle)
@@ -1406,7 +1531,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
             max_key = max(
                 list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
             cell_area_overlap = cell_overlap_area(
-                maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0], mod_overlap)
+                maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0],
+                mod_overlap)
             # Calculate shading matrix
             op_shade_array = calc_cell_shading(
                 cell_area_overlap, CELLAREA, translucence, dir_diff_ratio)
@@ -1417,7 +1543,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
             elif shd_type == 'col':
                 shd_scn = 'Shade Column'
             else:
-                raise ValueError('Incorrect shade type. Valid values: row or col.')
+                raise ValueError(
+                    'Incorrect shade type. Valid values: row or col.')
             if cen_pt_d == 'reverse':
                 shd_scn += ' reverse'
             col_list = list(df_shd_sce.columns.values)
@@ -1434,7 +1561,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
         # Module dimensions
         MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0]
         MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
-        mod_prop_vec = np.arange(mod_prop_vec[0], mod_prop_vec[1]+1, mod_prop_vec[2])
+        mod_prop_vec = np.arange(mod_prop_vec[0], mod_prop_vec[1]+1,
+                                 mod_prop_vec[2])
         for mod_prop in mod_prop_vec:
             mod_prop = round(mod_prop, 3)
             # Define shade coordinates
@@ -1445,7 +1573,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
                 shd_x = mod_prop
                 shd_y = MY
             else:
-                raise ValueError('Incorrect shade type. Valid values: row or col.')
+                raise ValueError(
+                    'Incorrect shade type. Valid values: row or col.')
             cen_pt = [0.5*shd_x, 0.5*shd_y]
             # Create shade polygon (Rectangle)
             full_poly = create_rectangle(cen_pt, shd_x, shd_y, 0)
@@ -1459,7 +1588,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
             max_key = max(
                 list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
             cell_area_overlap = cell_overlap_area(
-                maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0], mod_overlap)
+                maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0],
+                mod_overlap)
             # Calculate shading matrix
             op_shade_array = calc_cell_shading(
                 cell_area_overlap, CELLAREA, translucence, dir_diff_ratio)
@@ -1470,7 +1600,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
             elif shd_type == 'col':
                 shd_scn = 'Shade Column'
             else:
-                raise ValueError('Incorrect shade type. Valid values: row or col.')
+                raise ValueError(
+                    'Incorrect shade type. Valid values: row or col.')
             col_list = list(df_shd_sce.columns.values)
             df_new_row = pd.DataFrame(data=[['Standard',
                                              shd_scn,
@@ -1486,8 +1617,10 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row', rowcol_type='mod_prop
     return df_shd_sce
 
 
-def bottom_edge_soiling(maxsys_dict, df_shd_sce, bes_shape='rectangle', mod_prop_vec=[1, 10, 1], translucence=1,
-                        dir_diff_ratio=1, shd_type='row', rowcol_type='mod_prop'):
+def bottom_edge_soiling(maxsys_dict, df_shd_sce, bes_shape='rectangle',
+                        mod_prop_vec=[1, 10, 1], translucence=1,
+                        dir_diff_ratio=1, shd_type='row',
+                        rowcol_type='mod_prop'):
     """
     Generate bottom edge soiling scenario.
 
@@ -1498,9 +1631,11 @@ def bottom_edge_soiling(maxsys_dict, df_shd_sce, bes_shape='rectangle', mod_prop
     df_shd_sce : pandas.DataFrame
         Dataframe containing the shading scenarios information.
     bes_shape : str, optional
-        Shape of the shading. Options are 'rectangle', 'single_triangle', 'double_triangle'. The default is 'rectangle'.
+        Shape of the shading. Options are 'rectangle', 'single_triangle',
+        'double_triangle'. The default is 'rectangle'.
     mod_prop_vec : list, optional
-        List containing the proportions or actual dimensions by which to shade the module. The default is [1, 10, 1].
+        List containing the proportions or actual dimensions by which to shade
+        the module. The default is [1, 10, 1].
     translucence : float, optional
         Opacity of the shading. The default is 1.
     dir_diff_ratio : float, optional
@@ -1508,7 +1643,8 @@ def bottom_edge_soiling(maxsys_dict, df_shd_sce, bes_shape='rectangle', mod_prop
     shd_type : str, optional
         Specify whether it is row or columnwise shading. The default is 'row'.
     rowcol_type : str, optional
-        Specify whether the shading needs to be done cellwise, proportionally or by actual dimensions.
+        Specify whether the shading needs to be done cellwise, proportionally
+        or by actual dimensions.
         The default is 'mod_prop'.
 
     Returns
@@ -1532,7 +1668,8 @@ def bottom_edge_soiling(maxsys_dict, df_shd_sce, bes_shape='rectangle', mod_prop
         mod_prop_vec = np.arange(
             mod_prop_vec[0], mod_prop_vec[1]+1, mod_prop_vec[2])
     else:
-        raise ValueError('Incorrect rowcol type. Valid values: mod_prop or actual.')
+        raise ValueError(
+            'Incorrect rowcol type. Valid values: mod_prop or actual.')
     for mod_prop in mod_prop_vec:
         mod_prop = round(mod_prop, 2)
         if bes_shape == 'rectangle':
@@ -1604,7 +1741,8 @@ def bottom_edge_soiling(maxsys_dict, df_shd_sce, bes_shape='rectangle', mod_prop
             full_poly1 = create_rtang_triangle(cen_pt1, shd_x, shd_y, 0)
             full_poly = unary_union([full_poly1, full_poly2])
         else:
-            raise ValueError('Incorrect shape. Inputs for bes_shape: rectangle, single_triangle, or double_triangle')
+            raise ValueError(
+                'Incorrect shape. Inputs for bes_shape: rectangle, single_triangle, or double_triangle')
         # Check overlap against module
         mod_overlap = maxsys_dict['Physical_Info']['Module_Polygon'].iloc[-1,
                                                                           0].intersection(full_poly)
@@ -1615,7 +1753,8 @@ def bottom_edge_soiling(maxsys_dict, df_shd_sce, bes_shape='rectangle', mod_prop
         max_key = max(
             list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
         cell_area_overlap = cell_overlap_area(
-            maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0], mod_overlap)
+            maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0],
+            mod_overlap)
         # Calculate shading matrix
         op_shade_array = calc_cell_shading(
             cell_area_overlap, CELLAREA, translucence, dir_diff_ratio)
@@ -1665,7 +1804,8 @@ def create_rtang_triangle(bh_pt, xlen, ylen, rot_ang):
                        [np.sin(np.deg2rad(rot_ang)),
                         np.cos(np.deg2rad(rot_ang))]
                        ])
-    # Define vertices of rectangle in rotated dimensions (x', y' coordinate axis)
+    # Define vertices of rectangle in
+    # rotated dimensions (x', y' coordinate axis)
     trg_rot_vert = np.array([[0, 0, xlen],
                              [0, ylen, 0]
                              ])
@@ -1678,8 +1818,11 @@ def create_rtang_triangle(bh_pt, xlen, ylen, rot_ang):
     return trg_shply
 
 
-def shade_rot_rectangle(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(25, 81, 25), sh_width_vec=np.arange(25, 115, 35),
-                        translucence=1, dir_diff_ratio=1, use_std=True, pickle_fn='Wire_Pole_Data.pickle',
+def shade_rot_rectangle(maxsys_dict, df_shd_sce,
+                        rot_ang_vec=np.arange(25, 81, 25),
+                        sh_width_vec=np.arange(25, 115, 35),
+                        translucence=1, dir_diff_ratio=1, use_std=True,
+                        pickle_fn='Wire_Pole_Data.pickle',
                         stype='Wire Pole', cen_pt='middle'):
     """
     Generate Wire, Pole, or Chimney shading.
@@ -1691,7 +1834,8 @@ def shade_rot_rectangle(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(25, 81, 2
     df_shd_sce : pandas.DataFrame
         Dataframe containing the shading scenarios information.
     rot_ang_vec : numpy.array, optional
-        Rotation angle of the shading rectangle. The default is np.arange(25, 81, 25).
+        Rotation angle of the shading rectangle.
+        The default is np.arange(25, 81, 25).
     sh_width_vec : numpy.array, optional
         Width of the shading rectangle. The default is np.arange(25, 115, 35).
     translucence : float, optional
@@ -1699,13 +1843,16 @@ def shade_rot_rectangle(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(25, 81, 2
     dir_diff_ratio : float, optional
         Direct to diffuse irradiance ratio. The default is 1.
     use_std : bool, optional
-        If True, use a standard scenario and scale based on Module dimensions. The default is True.
+        If True, use a standard scenario and scale based on Module dimensions.
+        The default is True.
     pickle_fn : str, optional
-        Name of the standard scenario pickle file. The default is 'Wire_Pole_Data.pickle'.
+        Name of the standard scenario pickle file.
+        The default is 'Wire_Pole_Data.pickle'.
     stype : str, optional
         Shading type. The default is 'Wire Pole'.
     cen_pt : str, optional
-        Which location of the module to shade from. Options are middle, BR, BL, TR, TL, diagonal.
+        Which location of the module to shade from.
+        Options are middle, BR, BL, TR, TL, diagonal.
         The default is 'middle'.
 
     Returns
@@ -1757,10 +1904,14 @@ def shade_rot_rectangle(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(25, 81, 2
         del_CX = 0.5 * sh_width_vec * np.cos(act_ra)
         del_CY = 0.5 * sh_width_vec * np.sin(act_ra)
         cen_pt = [
-            0.5*maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0] - del_CX[0],
-            0.5*maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1] + del_CY[0]
+            0.5 *
+            maxsys_dict['Physical_Info']['Module_Coordinates'][-1,
+                                                               0, 2, 0] - del_CX[0],
+            0.5 *
+            maxsys_dict['Physical_Info']['Module_Coordinates'][-1,
+                                                               0, 2, 1] + del_CY[0]
         ]
-    elif type(cen_pt) == str:
+    elif isinstance(cen_pt, str):
         raise ValueError(
             'Incorrect center point. Pptions are middle, BL, BR, TL, TR, or list of corrdinates, eg. cen_pt = [x, y].')
     if use_std:
@@ -1769,8 +1920,10 @@ def shade_rot_rectangle(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(25, 81, 2
         try:
             wire_pole_data = load_pickle(pickle_path)
         except FileNotFoundError:
-            MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0]
-            MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
+            MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0,
+                                                                    2, 0]
+            MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0,
+                                                                    2, 1]
             poly_coords = []
             for idx_wid, sh_width in enumerate(sh_width_vec):
                 sh_width = round(sh_width, 2)
@@ -1827,7 +1980,8 @@ def shade_rot_rectangle(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(25, 81, 2
             max_key = max(
                 list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
             cell_area_overlap = cell_overlap_area(
-                maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0], mod_overlap)
+                maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0],
+                mod_overlap)
             # Calculate shading matrix
             op_shade_array = calc_cell_shading(
                 cell_area_overlap, CELLAREA, translucence, dir_diff_ratio)
@@ -1848,9 +2002,12 @@ def shade_rot_rectangle(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(25, 81, 2
     return df_shd_sce, sh_width_vec
 
 
-def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15), sh_width_vec=np.arange(25, 115, 35),
-               sh_len_vec=np.arange(25, 25, 1), translucence=1, dir_diff_ratio=1, use_std=True, use_len=False,
-               pickle_fn='L1by4_Pipe_Data.pickle', stype='L1by4 Pipe', cen_pt='L1by4'):
+def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15),
+               sh_width_vec=np.arange(25, 115, 35),
+               sh_len_vec=np.arange(25, 25, 1), translucence=1,
+               dir_diff_ratio=1, use_std=True, use_len=False,
+               pickle_fn='L1by4_Pipe_Data.pickle', stype='L1by4 Pipe',
+               cen_pt='L1by4'):
     """
     Generate pipe shading scenario.
 
@@ -1861,7 +2018,8 @@ def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15), sh_wi
     df_shd_sce : pandas.DataFrame
         Dataframe containing the shading scenarios information.
     rot_ang_vec : numpy.array, optional
-        Rotation angle of the shading rectangle. The default is np.arange(15, 46, 15).
+        Rotation angle of the shading rectangle.
+        The default is np.arange(15, 46, 15).
     sh_width_vec : numpy.array, optional
         Width of the shading rectangle. The default is np.arange(25, 115, 35).
     sh_len_vec : numpy.array, optional
@@ -1871,15 +2029,18 @@ def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15), sh_wi
     dir_diff_ratio : float, optional
         Direct to diffuse irradiance ratio. The default is 1.
     use_std : bool, optional
-        If True, use a standard scenario and scale based on Module dimensions. The default is True.
+        If True, use a standard scenario and scale based on Module dimensions.
+        The default is True.
     use_len : book, optional
         Use actual lengths of the rectangle. The default is False.
     pickle_fn : str, optional
-        Name of the standard scenario pickle file. The default is 'L1by4_Pipe_Data.pickle'.
+        Name of the standard scenario pickle file.
+        The default is 'L1by4_Pipe_Data.pickle'.
     stype : str, optional
         Shading type. The default is 'L1by4 Pipe'.
     cen_pt : str, optional
-        Which location of the module to shade from. Options are L1by4, L0, L00, L1by2, L3by4, M0, M1by4, M1by2, M3by4,
+        Which location of the module to shade from. Options are L1by4, L0, L00,
+        L1by2, L3by4, M0, M1by4, M1by2, M3by4,
         R0, R1by4, R1by2, R3by4. The default is 'L1by4'.
 
     Returns
@@ -1981,7 +2142,7 @@ def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15), sh_wi
             0.75 *
             maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
         ]
-    elif type(cen_pt) == str:
+    elif isinstance(cen_pt, str):
         raise ValueError(
             'Incorrect cen_pt. Options: L1by4, L1by2, L3by4, M1by4, M1by2, M3by4, R1by4, R1by2, R3by4, or list of corrdinates, eg. cen_pt = [x, y].')
     if use_std:
@@ -1990,8 +2151,10 @@ def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15), sh_wi
         try:
             wire_pole_data = load_pickle(pickle_path)
         except FileNotFoundError:
-            MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0]
-            MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
+            MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0,
+                                                                    2, 0]
+            MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0,
+                                                                    2, 1]
             poly_coords = []
             for idx_wid, sh_width in enumerate(sh_width_vec):
                 sh_width = round(sh_width, 2)
@@ -2066,7 +2229,8 @@ def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15), sh_wi
             max_key = max(
                 list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
             cell_area_overlap = cell_overlap_area(
-                maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0], mod_overlap)
+                maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0],
+                mod_overlap)
             # Calculate shading matrix
             op_shade_array = calc_cell_shading(
                 cell_area_overlap, CELLAREA, translucence, dir_diff_ratio)
@@ -2116,7 +2280,7 @@ def shade_mixed1(maxsys_dict, df_shd_sce, translucence=1, dir_diff_ratio=1):
     # Module dimensions
     MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0]
     MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
-    # Standard shape dimensions based on Max3 from Adam Hoffman's shade scenarios.
+    # Std. shape dimensions.
     cen_pt_vec = [[0.0625*MX, 0.23*MY],
                   [0.1875*MX, 0.78*MY],
                   [0.4375*MX, 0.2464*MY],
@@ -2210,7 +2374,7 @@ def shade_mixed2(maxsys_dict, df_shd_sce, translucence=1, dir_diff_ratio=1):
     # Module dimensions
     MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0]
     MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
-    # Standard shape dimensions based on Max3 from Adam Hoffman's shade scenarios.
+    # Standard shape dimensions.
     cen_pt_vec = [[0, 0],
                   [0.125*MX, 0.7*MY],
                   [0.6*MX, 0.47*MY],
@@ -2303,13 +2467,18 @@ def shade_tree1(maxsys_dict, df_shd_sce, translucence=1, dir_diff_ratio=1):
     # Module dimensions
     MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0]
     MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
-    # Standard shape dimensions based on Max3 from Adam Hoffman's shade scenarios.
+    # Standard shape dimensions.
     # Points
-    poly_points = np.asarray([(MX, 0.02*MY), (0.87*MX, 0.02*MY), (0.83*MX, 0.07*MY), (0.83*MX, 0.2*MY),
-                              (0.45*MX, 0.2*MY), (0.45*MX, 0.24*MY), (0.5*MX, 0.24*MY), (0.5*MX, 0.3*MY),
-                              (0.83*MX, 0.3*MY), (0.83*MX, 0.35*MY), (0.5*MX, 0.35*MY), (0.5*MX, 0.5*MY),
-                              (0.75*MX, 0.5*MY), (0.75*MX, 0.45*MY), (0.87*MX, 0.45*MY),
-                              (0.87*MX, 0.3*MY), (0.93*MX, 0.3*MY), (0.93*MX, 0.2*MY), (MX, 0.2*MY), (MX, 0.02*MY)])
+    poly_points = np.asarray([(MX, 0.02*MY), (0.87*MX, 0.02*MY),
+                              (0.83*MX, 0.07*MY), (0.83*MX, 0.2*MY),
+                              (0.45*MX, 0.2*MY), (0.45*MX, 0.24*MY),
+                              (0.5*MX, 0.24*MY), (0.5*MX, 0.3*MY),
+                              (0.83*MX, 0.3*MY), (0.83*MX, 0.35*MY),
+                              (0.5*MX, 0.35*MY), (0.5*MX, 0.5*MY),
+                              (0.75*MX, 0.5*MY), (0.75*MX, 0.45*MY),
+                              (0.87*MX, 0.45*MY),
+                              (0.87*MX, 0.3*MY), (0.93*MX, 0.3*MY),
+                              (0.93*MX, 0.2*MY), (MX, 0.2*MY), (MX, 0.02*MY)])
     # Polygon
     tree_poly = Polygon(poly_points)
     # Check overlap against module
@@ -2395,7 +2564,8 @@ def shade_tree2(maxsys_dict, df_shd_sce, rot_ang, cen_pt,
         max_key = max(
             list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
         cell_area_overlap = cell_overlap_area(
-            maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0], mod_overlap)
+            maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0],
+            mod_overlap)
         # Calculate shading matrix
         op_shade_array = calc_cell_shading(
             cell_area_overlap, CELLAREA, translucence, dir_diff_ratio)
@@ -2416,7 +2586,7 @@ def shade_tree2(maxsys_dict, df_shd_sce, rot_ang, cen_pt,
 def shade_tree3(maxsys_dict, df_shd_sce, rot_ang, cen_pt,
                 translucence=1, dir_diff_ratio=1):
     """
-    Generate fern leaf shape that is easier to manufacture with maximum precision.
+    Generate fern leaf shape that is easier to manufacture with max precision.
 
     Parameters
     ----------
@@ -2468,7 +2638,8 @@ def shade_tree3(maxsys_dict, df_shd_sce, rot_ang, cen_pt,
         max_key = max(
             list(maxsys_dict['Physical_Info']['Cell_Polygons'].keys()))
         cell_area_overlap = cell_overlap_area(
-            maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0], mod_overlap)
+            maxsys_dict['Physical_Info']['Cell_Polygons'][max_key][0],
+            mod_overlap)
         # Calculate shading matrix
         op_shade_array = calc_cell_shading(
             cell_area_overlap, CELLAREA, translucence, dir_diff_ratio)
@@ -2488,7 +2659,8 @@ def shade_tree3(maxsys_dict, df_shd_sce, rot_ang, cen_pt,
 
 def shade_user_define_objects(maxsys_dict, df_shd_sce, cen_pt_vec, shp_x_vec,
                               shp_y_vec, rot_vec, shp_vec,
-                              translucence=1, dir_diff_ratio=1, scen_name='User'):
+                              translucence=1, dir_diff_ratio=1,
+                              scen_name='User'):
     """
     Generate a user defined shading scenario.
 
@@ -2532,55 +2704,84 @@ def shade_user_define_objects(maxsys_dict, df_shd_sce, cen_pt_vec, shp_x_vec,
     MY = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
     for idx_cp, sx in enumerate(shp_x_vec):
         cp = cen_pt_vec[idx_cp]
-        if type(cp) == str:
+        if isinstance(cp, str):
             if 'cell' in cp:
                 cell_num = [int(s) for s in re.findall(r'\d+', cp)]
                 cell_idx = np.where(
                     maxsys_dict['Physical_Info']['Index_Map'] == cell_num)
                 try:
                     if cp == 'cell_mid':
-                        cp = [cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 0] + cell_len*0.5,
-                              cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 1] + cell_width*0.5]
+                        cp = [cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0], 0, 0] + cell_len*0.5,
+                              cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0],
+                                          0, 1] + cell_width*0.5]
                     elif cp == 'cell_top':
-                        cp = [cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 0] + cell_len*0.5,
-                              cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 1] + (cell_width - 0.5*shp_y_vec[idx_cp])]
+                        cp = [cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0], 0, 0] + cell_len*0.5,
+                              cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0],
+                                          0, 1] + (cell_width - 0.5*shp_y_vec[idx_cp])]
                     elif cp == 'cell_bottom':
-                        cp = [cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 0] + cell_len*0.5,
-                              cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 1] + (0.5*shp_y_vec[idx_cp])]
+                        cp = [cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0], 0, 0] + cell_len*0.5,
+                              cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0],
+                                          0, 1] + (0.5*shp_y_vec[idx_cp])]
                     elif cp == 'cell_left':
-                        cp = [cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 0] + (0.5*sx),
-                              cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 1] + cell_width*0.5]
+                        cp = [cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0], 0, 0] + (0.5*sx),
+                              cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0], 0, 1] + cell_width*0.5]
                     elif cp == 'cell_right':
-                        cp = [cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 0] + (cell_len - 0.5*sx),
-                              cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 1] + cell_width*0.5]
+                        cp = [cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0], 0, 0] + (cell_len - 0.5*sx),
+                              cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0], 0, 1] + cell_width*0.5]
                     else:
-                        cp = [cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 0] + cell_len*0.5,
-                              cell_coords[cell_idx[0][0], cell_idx[1][0], 0, 1] + cell_width*0.5]
+                        cp = [cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0], 0, 0] + cell_len*0.5,
+                              cell_coords[cell_idx[0][0],
+                                          cell_idx[1][0], 0, 1] + cell_width*0.5]
                 except IndexError:
                     cell_row = int((cell_coords.shape[0] - 1)*0.5)
                     cell_col = int((cell_coords.shape[1] - 1)*0.5)
                     # cp = [cell_coords[1, 2, 0, 0] + cell_len*0.5,
                     #       cell_coords[1, 2, 0, 1] + cell_width*0.5]
-                    # cp = [cell_coords[cell_row, cell_col, 0, 0] + cell_len*0.5,
-                    #       cell_coords[cell_row, cell_col, 0, 1] + cell_width*0.5]
+                    # cp = [cell_coords[cell_row,
+                    # cell_col, 0, 0] + cell_len*0.5,
+                    #       cell_coords[cell_row,
+                    # cell_col, 0, 1] + cell_width*0.5]
                     if cp == 'cell_mid':
-                        cp = [cell_coords[cell_row, cell_col, 0, 0] + cell_len*0.5,
-                              cell_coords[cell_row, cell_col, 0, 1] + cell_width*0.5]
+                        cp = [cell_coords[cell_row,
+                                          cell_col, 0, 0] + cell_len*0.5,
+                              cell_coords[cell_row,
+                                          cell_col, 0, 1] + cell_width*0.5]
                     elif cp == 'cell_top':
-                        cp = [cell_coords[cell_row, cell_col, 0, 0] + cell_len*0.5,
-                              cell_coords[cell_row, cell_col, 0, 1] + (cell_width - 0.5*shp_y_vec[idx_cp])]
+                        cp = [cell_coords[cell_row,
+                                          cell_col, 0, 0] + cell_len*0.5,
+                              cell_coords[cell_row,
+                                          cell_col, 0, 1] + (cell_width - 0.5*shp_y_vec[idx_cp])]
                     elif cp == 'cell_bottom':
-                        cp = [cell_coords[cell_row, cell_col, 0, 0] + cell_len*0.5,
-                              cell_coords[cell_row, cell_col, 0, 1] + (0.5*shp_y_vec[idx_cp])]
+                        cp = [cell_coords[cell_row,
+                                          cell_col, 0, 0] + cell_len*0.5,
+                              cell_coords[cell_row,
+                                          cell_col, 0, 1] + (0.5*shp_y_vec[idx_cp])]
                     elif cp == 'cell_left':
-                        cp = [cell_coords[cell_row, cell_col, 0, 0] + (0.5*sx),
-                              cell_coords[cell_row, cell_col, 0, 1] + cell_width*0.5]
+                        cp = [cell_coords[cell_row,
+                                          cell_col, 0, 0] + (0.5*sx),
+                              cell_coords[cell_row,
+                                          cell_col, 0, 1] + cell_width*0.5]
                     elif cp == 'cell_right':
-                        cp = [cell_coords[cell_row, cell_col, 0, 0] + (cell_len - 0.5*sx),
-                              cell_coords[cell_row, cell_col, 0, 1] + cell_width*0.5]
+                        cp = [cell_coords[cell_row,
+                                          cell_col, 0, 0] + (cell_len - 0.5*sx),
+                              cell_coords[cell_row,
+                                          cell_col, 0, 1] + cell_width*0.5]
                     else:
-                        cp = [cell_coords[cell_row, cell_col, 0, 0] + cell_len*0.5,
-                              cell_coords[cell_row, cell_col, 0, 1] + cell_width*0.5]
+                        cp = [cell_coords[cell_row,
+                                          cell_col, 0, 0] + cell_len*0.5,
+                              cell_coords[cell_row,
+                                          cell_col, 0, 1] + cell_width*0.5]
                     # cp = [cell_coords[1, 2, 0, 0] + cell_len*0.5,
                     #       cell_coords[1, 2, 0, 1] + cell_width*0.5]
             elif cp == 'BR':
@@ -2608,7 +2809,8 @@ def shade_user_define_objects(maxsys_dict, df_shd_sce, cen_pt_vec, shp_x_vec,
         elif shp == 'rect':
             shd_poly = create_rectangle(cp, sx, sy, rot_ang)
         else:
-            raise ValueError('Wrong shape inputted! Options are triang, ell, rect.')
+            raise ValueError(
+                'Wrong shape inputted! Options are triang, ell, rect.')
         full_poly.append(shd_poly)
     full_poly = unary_union(full_poly)
     # Check overlap against module
