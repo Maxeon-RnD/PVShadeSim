@@ -195,8 +195,9 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                                 sys_data = vpvsystem.calcACSystem(
                                     Ee_vec, Ee_mod, mod_data, NPT_dict,
                                     run_cellcurr=run_cellcurr)
-                                ccmod = cell_curr.est_cell_current_AC(sys_data,
-                                                                      idx_map)
+                                if run_cellcurr:
+                                    ccmod = cell_curr.est_cell_current_AC(sys_data,
+                                                                          idx_map)
                             else:
                                 # DC #
                                 # STRING #
@@ -207,10 +208,11 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                                 sys_data = vpvsystem.calcSystem(
                                     Ee_vec, Ee_str, str_data, NPT_dict,
                                     run_cellcurr=run_cellcurr)
-                                ccmod = cell_curr.est_cell_current_DC(sys_data,
-                                                                      str_data,
-                                                                      mod_data,
-                                                                      idx_map)
+                                if run_cellcurr:
+                                    ccmod = cell_curr.est_cell_current_DC(sys_data,
+                                                                          str_data,
+                                                                          mod_data,
+                                                                          idx_map)
 
                             dfSubCases['Pmp [W]'] = sys_data['Pmp'].tolist()
                             dfSubCases['Vmp [V]'] = sys_data['Vmp'].tolist()
@@ -220,10 +222,11 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                             dfSubCases['FF'] = sys_data['FF'].tolist()
                             dfSubCases['Num_BPdiode_active'] = sys_data['num_active_bpd'].tolist(
                             )
-                            dfSubCases['ncells_Rev_mpp'] = np.sum(ccmod['cell_isRev_mp'],
-                                                                  axis=(1, 2, 3, 4)).tolist()
-                            dfSubCases['ncells_Rev_isc'] = np.sum(ccmod['cell_isRev_sc'],
-                                                                  axis=(1, 2, 3, 4)).tolist()
+                            if run_cellcurr:
+                                dfSubCases['ncells_Rev_mpp'] = np.sum(ccmod['cell_isRev_mp'],
+                                                                      axis=(1, 2, 3, 4)).tolist()
+                                dfSubCases['ncells_Rev_isc'] = np.sum(ccmod['cell_isRev_sc'],
+                                                                      axis=(1, 2, 3, 4)).tolist()
                             pmp0 = sys_data['Pmp'][0]
                             dfSubCases['Power change [%]'] = 100 * \
                                 (dfSubCases['Pmp [W]']/pmp0 - 1)
