@@ -1,4 +1,4 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: pvshadesim
 Version: 0.0.7
 Summary: A physical and electrical shade model using Shapely and PVMismatch.
@@ -21,6 +21,7 @@ Requires-Dist: matplotlib
 Requires-Dist: seaborn
 Requires-Dist: plotly
 Requires-Dist: dataframe_image
+Dynamic: license-file
 
 # PVShadeSim
  A physical and electrical shade model using Shapely and PVMismatch.

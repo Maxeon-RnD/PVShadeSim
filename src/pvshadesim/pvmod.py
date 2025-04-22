@@ -189,7 +189,7 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls,
     # User cell idx and cell_poss
     if 'user_cell_idx' in mod_params:
         user_sht_name = mod_params['user_cell_idx']
-        if user_sht_name not in ['True', 'False', 'TRUE', 'FALSE']:
+        if user_sht_name not in ['True', 'False', 'TRUE', 'FALSE', False]:
             user_cell_idx = pd.read_excel(
                 cell_idx_xls, sheet_name=user_sht_name).to_numpy()
             user_cell_pos_df = pd.read_excel(
