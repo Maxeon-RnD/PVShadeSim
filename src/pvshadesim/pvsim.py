@@ -20,6 +20,11 @@ def_user_cell_idx_f = r'User_cell_index_maps.xlsx'
 def_user_cell_pos_f = r'User_cell_pos.xlsx'
 sim_config_csv = r'Sim_Config.csv'
 db_path = os.path.join(Path(__file__).parent, 'db')
+# Create IV database path
+IV_fold = 'IV_DB'
+IV_DB_loc = os.path.join(db_path, IV_fold)
+if os.path.isdir(IV_DB_loc) is not True:
+    os.makedirs(IV_DB_loc)
 
 
 def run(cell_prm_csv=os.path.join(db_path, def_cell_db),
@@ -37,7 +42,8 @@ def run(cell_prm_csv=os.path.join(db_path, def_cell_db),
         excel_fn="PVMM_Vectorized_Shade_Simulation_Results.xlsx",
         d_p_fn='Detailed_Data.pickle',
         run_cellcurr=True, c_p_fn='Cell_current.pickle',
-        Ee_round=2):
+        Ee_round=2, IV_DB_loc=IV_DB_loc, IV_res=0.02,
+        IV_trk_ct=True):
     """
     Run the entire PVShadeSim process.
 
@@ -105,6 +111,12 @@ def run(cell_prm_csv=os.path.join(db_path, def_cell_db),
     Ee_round : int, optional
         Rounding factor for Irradiance.
         The default is 2.
+    IV_DB_loc : str, optional
+        Location of IV curves database.
+        The default is IV_DB_loc.
+    IV_res : float, optional
+        Rounding factor for Irradiance in IV curves database.
+        The default is 0.02.
 
     Returns
     -------
@@ -147,5 +159,7 @@ def run(cell_prm_csv=os.path.join(db_path, def_cell_db),
                                         for_gui=for_gui, excel_fn=excel_fn,
                                         d_p_fn=d_p_fn,
                                         run_cellcurr=run_cellcurr,
-                                        c_p_fn=c_p_fn, Ee_round=Ee_round)
+                                        c_p_fn=c_p_fn, Ee_round=Ee_round,
+                                        IV_DB_loc=IV_DB_loc,
+                                        IV_res=IV_res, IV_trk_ct=IV_trk_ct)
     return dfCases
