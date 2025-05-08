@@ -261,6 +261,7 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls,
     mod_coord_array = create_cell_coordinates(sys_idx_map, [Mod_X], [Mod_Y],
                                               Mod_Space_X, Mod_Space_Y,
                                               Mod_Edge_X, Mod_Edge_Y,
+                                              0, 0,
                                               Tilt, str_tilt,
                                               is_Landscape=is_Landscape,
                                               is_Mod=True)
@@ -272,6 +273,12 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls,
     CellSpace_Y = mod_params['CellSpace_Y']
     EdgeSpace_X = mod_params['EdgeSpace_X']
     EdgeSpace_Y = mod_params['EdgeSpace_Y']
+    try:
+        MidSpace_X = mod_params['MidSpace_X']
+        MidSpace_Y = mod_params['MidSpace_Y']
+    except KeyError:
+        MidSpace_X = 0
+        MidSpace_Y = 0
     # Create Cell coordinates array
     syscell_poly_dict = {}
     for idx_row in range(mod_poly_df.shape[0]):
@@ -286,6 +293,8 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls,
                                                        CellSpace_Y,
                                                        EdgeSpace_X,
                                                        EdgeSpace_Y,
+                                                       MidSpace_X,
+                                                       MidSpace_Y,
                                                        Tilt, str_tilt,
                                                        Mod_orig_X, Mod_orig_Y,
                                                        is_Landscape=is_Landscape)
@@ -913,6 +922,7 @@ def create_sys_idx_map(str_len, num_str):
 def create_cell_coordinates(idx_map, cell_X, cell_Y,
                             CellSpace_X, CellSpace_Y,
                             EdgeSpace_X, EdgeSpace_Y,
+                            MidSpace_X, MidSpace_Y,
                             Tilt, str_tilt,
                             Mod_orig_X=0, Mod_orig_Y=0,
                             is_Mod=False,
@@ -937,6 +947,10 @@ def create_cell_coordinates(idx_map, cell_X, cell_Y,
         Spacing between cell and module edge in X-direction in cm.
     EdgeSpace_Y : float
         Spacing between cell and module edge in Y-direction in cm.
+    MidSpace_X : float
+        Spacing in the middle of module (eg. HC Butterfly) in cm.
+    MidSpace_Y : float
+        Spacing in the middle of module (eg. HC Butterfly) in cm.
     Tilt : float
         Tilt angle in degrees.
     str_tilt : bool
@@ -963,10 +977,12 @@ def create_cell_coordinates(idx_map, cell_X, cell_Y,
         cell_X, cell_Y = cell_Y, cell_X
         CellSpace_X, CellSpace_Y = CellSpace_Y, CellSpace_X
         EdgeSpace_X, EdgeSpace_Y = EdgeSpace_Y, EdgeSpace_X
+        MidSpace_X, MidSpace_Y = MidSpace_Y, MidSpace_X
     elif is_Landscape and is_Mod:
         cell_X, cell_Y = cell_Y, cell_X
         CellSpace_X, CellSpace_Y = CellSpace_Y, CellSpace_X
         EdgeSpace_X, EdgeSpace_Y = EdgeSpace_Y, EdgeSpace_X
+        MidSpace_X, MidSpace_Y = MidSpace_Y, MidSpace_X
 
     # Define cell coordinates
 
@@ -1047,6 +1063,16 @@ def create_cell_coordinates(idx_map, cell_X, cell_Y,
     cell_coord_array[:, :, 2, 1] = cell_coord_array[:, :, 1, 1].copy()
     # Bottom Right
     cell_coord_array[:, :, 3, 1] = cell_coord_array[:, :, 0, 1].copy()
+
+    # Shift upper or right half of cells by Midspace
+    # First find the middle index
+    x_mid_idx = int(round(cell_coord_array.shape[1] * 0.5))
+    y_mid_idx = int(round(cell_coord_array.shape[0] * 0.5))
+    # Add the Mid space
+    cell_coord_array[y_mid_idx:, :, :, 1] = MidSpace_Y + (
+        cell_coord_array[y_mid_idx:, :, :, 1])
+    cell_coord_array[:, x_mid_idx:, :, 0] = MidSpace_X + (
+        cell_coord_array[:, x_mid_idx:, :, 0])
 
     return cell_coord_array
 
@@ -1178,7 +1204,8 @@ def calc_numcols_diode(num_x, num_y, num_diodes, is_series, num_parallel,
                     remaining_cells = num_y*num_x / \
                         num_parallel - sum(numcols_diode)
                     # Add remaining cells to middle of the list
-                    numcols_diode[find_middle(numcols_diode)] = remaining_cells
+                    numcols_diode[find_middle(
+                        numcols_diode)] = remaining_cells
                 return numcols_diode
         else:
             # ALL PARALLEL Case" Easier. Need to use cells in Y direction only.

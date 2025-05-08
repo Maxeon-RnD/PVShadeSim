@@ -156,7 +156,8 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                                                     translucence=translucence,
                                                                     dir_diff_ratio=dir_diff_ratio)
                             elif func_name == 'leaves_birddroppings':
-                                num_obj = int(sub_df.loc['num_obj', [scen]][0])
+                                num_obj = int(
+                                    sub_df.loc['num_obj', [scen]][0])
                                 maj_dia = ast.literal_eval(
                                     sub_df.loc['x_len', [scen]][0])
                                 min_dia = ast.literal_eval(
@@ -341,6 +342,8 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                               (int, float)):
                                     use_len = sub_df.loc['shade_mod_prop',
                                                          [scen]][0]
+                                elif sub_df.loc['shade_mod_prop', [scen]][0].lower() == 'true':
+                                    use_len = True
                                 else:
                                     use_len = ast.literal_eval(sub_df.loc['shade_mod_prop',
                                                                           [scen]][0])
@@ -897,7 +900,8 @@ def gen_cells_shd_list(maxsys_dict, num_cells):
     diode_idx = diode_idx[:num_cells]
     par_idx = par_idx[:num_cells]
     for idx_num in range(num_cells):
-        idx_list = gen_idx_list(cell_pos, diode_idx[idx_num], par_idx[idx_num])
+        idx_list = gen_idx_list(
+            cell_pos, diode_idx[idx_num], par_idx[idx_num])
         idx_list = remove_old_cells(shd_cell_list, idx_list)
         idx_cell = random.choice(idx_list)
         shd_cell_list.append(idx_cell)
@@ -1489,7 +1493,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row',
                                              mod_overlap_area,
                                              mod_overlap_area_perc
                                              ]], columns=col_list)
-            df_shd_sce = pd.concat([df_shd_sce, df_new_row], ignore_index=True)
+            df_shd_sce = pd.concat(
+                [df_shd_sce, df_new_row], ignore_index=True)
     elif rowcol_type == 'mod_prop':
         # Module dimensions
         MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0]
@@ -1556,7 +1561,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row',
                                              mod_overlap_area,
                                              mod_overlap_area_perc
                                              ]], columns=col_list)
-            df_shd_sce = pd.concat([df_shd_sce, df_new_row], ignore_index=True)
+            df_shd_sce = pd.concat(
+                [df_shd_sce, df_new_row], ignore_index=True)
     elif rowcol_type == 'actual':
         # Module dimensions
         MX = maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0]
@@ -1611,7 +1617,8 @@ def shade_row_col(maxsys_dict, df_shd_sce, shd_type='row',
                                              mod_overlap_area,
                                              mod_overlap_area_perc
                                              ]], columns=col_list)
-            df_shd_sce = pd.concat([df_shd_sce, df_new_row], ignore_index=True)
+            df_shd_sce = pd.concat(
+                [df_shd_sce, df_new_row], ignore_index=True)
     else:
         print('Incorrect row shade type inputted. Possible inputs for rowcol_type: mod_prop or cells.')
     return df_shd_sce
@@ -1874,7 +1881,8 @@ def shade_rot_rectangle(maxsys_dict, df_shd_sce,
         cen_pt = [
             0.5 *
             maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0],
-            0.5*maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
+            0.5 *
+            maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
         ]
     elif cen_pt == 'BR':
         cen_pt = [
@@ -1997,7 +2005,8 @@ def shade_rot_rectangle(maxsys_dict, df_shd_sce,
                                              mod_overlap_area,
                                              mod_overlap_area_perc
                                              ]], columns=col_list)
-            df_shd_sce = pd.concat([df_shd_sce, df_new_row], ignore_index=True)
+            df_shd_sce = pd.concat(
+                [df_shd_sce, df_new_row], ignore_index=True)
             idx_sim += 1
     return df_shd_sce, sh_width_vec
 
@@ -2079,7 +2088,8 @@ def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15),
         cen_pt = [
             0.25 *
             maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0],
-            0.5*maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
+            0.5 *
+            maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
         ]
     elif cen_pt == 'L3by4':
         cen_pt = [
@@ -2107,7 +2117,8 @@ def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15),
         cen_pt = [
             0.5 *
             maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0],
-            0.5*maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
+            0.5 *
+            maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
         ]
     elif cen_pt == 'M3by4':
         cen_pt = [
@@ -2133,7 +2144,8 @@ def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15),
         cen_pt = [
             0.75 *
             maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 0],
-            0.5*maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
+            0.5 *
+            maxsys_dict['Physical_Info']['Module_Coordinates'][-1, 0, 2, 1]
         ]
     elif cen_pt == 'R3by4':
         cen_pt = [
@@ -2246,7 +2258,8 @@ def shade_pipe(maxsys_dict, df_shd_sce, rot_ang_vec=np.arange(15, 46, 15),
                                              mod_overlap_area,
                                              mod_overlap_area_perc
                                              ]], columns=col_list)
-            df_shd_sce = pd.concat([df_shd_sce, df_new_row], ignore_index=True)
+            df_shd_sce = pd.concat(
+                [df_shd_sce, df_new_row], ignore_index=True)
             idx_sim += 1
     return df_shd_sce, sh_width_vec
 
@@ -2407,7 +2420,8 @@ def shade_mixed2(maxsys_dict, df_shd_sce, translucence=1, dir_diff_ratio=1):
         elif shp == 'ell':
             shd_poly = create_ellipse(cp, sx, sy, rot_ang)
         else:
-            raise ValueError('Wrong shape inputted! Options are triang or ell')
+            raise ValueError(
+                'Wrong shape inputted! Options are triang or ell')
         full_poly.append(shd_poly)
     full_poly = unary_union(full_poly)
     # Check overlap against module
@@ -2744,8 +2758,8 @@ def shade_user_define_objects(maxsys_dict, df_shd_sce, cen_pt_vec, shp_x_vec,
                               cell_coords[cell_idx[0][0],
                                           cell_idx[1][0], 0, 1] + cell_width*0.5]
                 except IndexError:
-                    cell_row = int((cell_coords.shape[0] - 1)*0.5)
-                    cell_col = int((cell_coords.shape[1] - 1)*0.5)
+                    cell_row = int((cell_coords.shape[0] - 1)*0.5) - 1
+                    cell_col = int((cell_coords.shape[1] - 1)*0.5) - 1
                     # cp = [cell_coords[1, 2, 0, 0] + cell_len*0.5,
                     #       cell_coords[1, 2, 0, 1] + cell_width*0.5]
                     # cp = [cell_coords[cell_row,
