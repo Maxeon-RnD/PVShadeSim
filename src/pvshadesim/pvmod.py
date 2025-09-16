@@ -62,6 +62,7 @@ def create_pvmod_dict(pvmod_params, sim_config, pvcell_params,
     num_str_list = sim_config_T['Num_Str'].tolist()
     num_mods_shade_list = sim_config_T['Num_Mods_Shade'].tolist()
     is_AC_Mod_list = sim_config_T['is_AC_Mod'].tolist()
+    is_sub_Mod_list = sim_config_T['is_sub_Mod'].tolist()
     plot_label_list = sim_config_T.index.tolist()
     MSX_list = sim_config_T['Mod_Space_X'].tolist()
     MSY_list = sim_config_T['Mod_Space_Y'].tolist()
@@ -89,6 +90,7 @@ def create_pvmod_dict(pvmod_params, sim_config, pvcell_params,
             cell_name = [cell_name]
         is_Landscape = is_ls_list[idx_sim]
         is_AC_Mod = is_AC_Mod_list[idx_sim]
+        is_sub_Mod = is_sub_Mod_list[idx_sim]
         shade_sce = shade_list[idx_sim]
         if mod_name not in mods_sys_dict:
             mods_sys_dict[mod_name] = {}
@@ -101,12 +103,15 @@ def create_pvmod_dict(pvmod_params, sim_config, pvcell_params,
             orientation = 'Portrait'
         if orientation not in mods_sys_dict[mod_name][cname]:
             mods_sys_dict[mod_name][cname][orientation] = {}
-        if is_AC_Mod:
+        if is_AC_Mod and not is_sub_Mod:
             mod_type = 'AC'
+        elif is_sub_Mod and not is_AC_Mod:
+            mod_type = 'subModule'
         else:
             mod_type = 'DC'
         sim_info = [str_len_list[idx_sim], num_str_list[idx_sim],
                     num_mods_shade_list[idx_sim], is_AC_Mod_list[idx_sim],
+                    is_sub_Mod_list[idx_sim],
                     plot_label_list[idx_sim], MSX_list[idx_sim],
                     MSY_list[idx_sim], MEX_list[idx_sim],
                     MEY_list[idx_sim], Tilt_list[idx_sim],
@@ -171,7 +176,7 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls,
     pvconst = pvconstants.PVconstants(npts=NPTS)
 
     # Sim info
-    str_len, num_str, num_mods_shade, is_AC_Mod, plot_label, Mod_Space_X, Mod_Space_Y, Mod_Edge_X, Mod_Edge_Y, Tilt, Azimuth, str_tilt, num_str_tracker, mkt, gcr = sim_info
+    str_len, num_str, num_mods_shade, is_AC_Mod, is_sub_Mod, plot_label, Mod_Space_X, Mod_Space_Y, Mod_Edge_X, Mod_Edge_Y, Tilt, Azimuth, str_tilt, num_str_tracker, mkt, gcr = sim_info
     num_mods_shade = ast.literal_eval(num_mods_shade)
 
     # Convert some of the variable to required type
@@ -426,6 +431,7 @@ def create_pv_mod(pvmod_params, pvcell_params, cell_idx_xls, cell_pos_xls,
     maxsys_dict['Sim_info']['num_str'] = num_str
     maxsys_dict['Sim_info']['num_mods_shade'] = num_mods_shade
     maxsys_dict['Sim_info']['is_AC_Mod'] = is_AC_Mod
+    maxsys_dict['Sim_info']['is_sub_Mod'] = is_sub_Mod
     maxsys_dict['Sim_info']['plot_label'] = plot_label
     maxsys_dict['Sim_info']['tilt'] = Tilt
     maxsys_dict['Sim_info']['azimuth'] = Azimuth
@@ -1069,10 +1075,10 @@ def create_cell_coordinates(idx_map, cell_X, cell_Y,
     x_mid_idx = int(round(cell_coord_array.shape[1] * 0.5))
     y_mid_idx = int(round(cell_coord_array.shape[0] * 0.5))
     # Add the Mid space
-    cell_coord_array[y_mid_idx:, :, :, 1] = MidSpace_Y + (
-        cell_coord_array[y_mid_idx:, :, :, 1])
-    cell_coord_array[:, x_mid_idx:, :, 0] = MidSpace_X + (
-        cell_coord_array[:, x_mid_idx:, :, 0])
+    cell_coord_array[:y_mid_idx, :, :, 1] = MidSpace_Y + (
+        cell_coord_array[:y_mid_idx, :, :, 1])
+    cell_coord_array[:, :x_mid_idx, :, 0] = MidSpace_X + (
+        cell_coord_array[:, :x_mid_idx, :, 0])
 
     return cell_coord_array
 
