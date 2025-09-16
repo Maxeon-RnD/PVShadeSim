@@ -97,6 +97,10 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                      'AL', 'TUV Class', 'Isys [A]',
                      'Vsys [V]', 'Psys [W]', 'sys_class']
         dfCases = pd.DataFrame(columns=res_names)
+        if TUV_class:
+            tuv_cols = ['Module', 'Cell Name', 'Plot Label',
+                        'Shade Type', 'AL', 'TUV Score']
+            df_TUV = pd.DataFrame(columns=tuv_cols)
         mod_sys_keys = list(mods_sys_dict.keys())
         if save_detailed:
             detailed_dict = {}
@@ -120,6 +124,7 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                         num_str = int(maxsys_dict['Sim_info']['num_str'])
                         num_mods_shade = maxsys_dict['Sim_info']['num_mods_shade']
                         is_AC_Mod = maxsys_dict['Sim_info']['is_AC_Mod']
+                        is_sub_Mod = maxsys_dict['Sim_info']['is_sub_Mod']
                         plot_label = maxsys_dict['Sim_info']['plot_label']
                         # Build Ee array for system
                         SA_list = maxsys_dict['Shade Scenarios']['Shade Array'].to_list(
@@ -174,14 +179,14 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                                 idx_map.shape[0], idx_map.shape[1],
                                 Ee_arr_np, Tcell)
                             # Get unique Ee at cell level
-                            Ee_cell, u_cell_type = vpvsystem.get_unique_Ee(
+                            Ee_cell, u_cell_type, _ = vpvsystem.get_unique_Ee(
                                 Ee_vec, search_type='cell',
                                 cell_type=cell_type)
                             # Get unique Ee at module level
-                            Ee_mod, _ = vpvsystem.get_unique_Ee(
+                            Ee_mod, _, _ = vpvsystem.get_unique_Ee(
                                 Ee_vec, search_type='module')
                             # Get unique Ee at string level
-                            Ee_str, _ = vpvsystem.get_unique_Ee(
+                            Ee_str, _, _ = vpvsystem.get_unique_Ee(
                                 Ee_vec, search_type='string')
                             # CELL #
                             # Extract cell prms
@@ -216,13 +221,20 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                             ss_DBs = gen_SSDBs_struct(cell_name, mod_name,
                                                       NPTS, NPTS_cell,
                                                       IV_DB_loc, IV_res)
-                            mod_data = vpvmodule.calcMods(
-                                cell_pos, maxmod, idx_map, Ee_mod, Ee_cell,
-                                u_cell_type, cell_type,
-                                cell_data, outer_circuit,
-                                run_cellcurr=run_cellcurr, mod_DBs=mod_DBs,
-                                ss_DBs=ss_DBs, Ee_round=Ee_round,
-                                IV_trk_ct=IV_trk_ct)
+                            if is_sub_Mod:
+                                mod_data = vpvmodule.calcsubMods(
+                                    cell_pos, maxmod, idx_map,
+                                    Ee_mod, Ee_cell,
+                                    u_cell_type, cell_type,
+                                    cell_data)
+                            else:
+                                mod_data = vpvmodule.calcMods(
+                                    cell_pos, maxmod, idx_map, Ee_mod, Ee_cell,
+                                    u_cell_type, cell_type,
+                                    cell_data, outer_circuit,
+                                    run_cellcurr=run_cellcurr, mod_DBs=mod_DBs,
+                                    ss_DBs=ss_DBs, Ee_round=Ee_round,
+                                    IV_trk_ct=IV_trk_ct)
                             if is_AC_Mod:
                                 # AC SYSTEM #
                                 sys_data = vpvsystem.calcACSystem(
@@ -232,18 +244,28 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                                     ccmod = cell_curr.est_cell_current_AC(
                                         sys_data, idx_map)
                             else:
-                                # DC #
-                                # STRING #
-                                str_data = vpvstring.calcStrings(
-                                    Ee_str, Ee_mod, mod_data, NPT_dict,
-                                    run_cellcurr=run_cellcurr)
-                                # SYSTEM #
-                                sys_data = vpvsystem.calcSystem(
-                                    Ee_vec, Ee_str, str_data, NPT_dict,
-                                    run_cellcurr=run_cellcurr)
-                                if run_cellcurr:
-                                    ccmod = cell_curr.est_cell_current_DC(
-                                        sys_data, str_data, mod_data, idx_map)
+                                if is_sub_Mod:
+                                    # SUB MODULE MPPT ###
+                                    sys_data = vpvsystem.calcsubModuleSystem(
+                                        Ee_vec, Ee_mod,
+                                        mod_data, NPT_dict,
+                                        run_bpact=False,
+                                        run_annual=False,
+                                        save_bpact_freq=False)
+                                else:
+                                    # DC #
+                                    # STRING #
+                                    str_data = vpvstring.calcStrings(
+                                        Ee_str, Ee_mod, mod_data, NPT_dict,
+                                        run_cellcurr=run_cellcurr)
+                                    # SYSTEM #
+                                    sys_data = vpvsystem.calcSystem(
+                                        Ee_vec, Ee_str, str_data, NPT_dict,
+                                        run_cellcurr=run_cellcurr)
+                                    if run_cellcurr:
+                                        ccmod = cell_curr.est_cell_current_DC(
+                                            sys_data, str_data, mod_data,
+                                            idx_map)
 
                             dfSubCases['Pmp [W]'] = sys_data['Pmp'].tolist()
                             dfSubCases['Vmp [V]'] = sys_data['Vmp'].tolist()
@@ -251,8 +273,11 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                             dfSubCases['Voc [V]'] = sys_data['Voc'].tolist()
                             dfSubCases['Isc [A]'] = sys_data['Isc'].tolist()
                             dfSubCases['FF'] = sys_data['FF'].tolist()
-                            dfSubCases['Num_BPdiode_active'] = sys_data['num_active_bpd'].tolist(
-                            )
+                            try:
+                                dfSubCases['Num_BPdiode_active'] = sys_data['num_active_bpd'].tolist(
+                                )
+                            except AttributeError:
+                                dfSubCases['Num_BPdiode_active'] = 0
                             if run_cellcurr:
                                 dfSubCases['ncells_Rev_mpp'] = np.sum(ccmod['cell_isRev_mp'],
                                                                       axis=(1, 2, 3, 4)).tolist()
@@ -270,8 +295,23 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                                 dfSubCases['Mod. Shade %']
                             # Calculate the TUV class if required
                             if TUV_class:
-                                dfSubCases['TUV Class'] = calc_TUV_class(
+                                TUV_out, AL_out = calc_TUV_class(
                                     dfSubCases['AL'].to_list())
+                                df_subTUV = pd.DataFrame(
+                                    columns=tuv_cols,
+                                    index=list(range(len(TUV_out))))
+                                df_subTUV['Module'] = mod_name
+                                df_subTUV['Cell Name'] = cell_name
+                                df_subTUV['Plot Label'] = plot_label
+                                df_subTUV['Shade Type'] = ['Unshaded',
+                                                           'Long-side',
+                                                           'Short-side',
+                                                           'Single spot',
+                                                           'Multiple spots',
+                                                           'Diagonal']
+                                df_subTUV['AL'] = AL_out
+                                df_subTUV['TUV Score'] = TUV_out
+                                df_TUV = pd.concat([df_TUV, df_subTUV])
                             dfCases = pd.concat([dfCases, dfSubCases])
                             if for_gui:
                                 module_dict = {}
@@ -330,10 +370,40 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
 
         dfCases_xls.to_excel(excel_fn,
                              sheet_name='Results', index=False)
+        if TUV_class:
+            with pd.ExcelWriter('TUV.xlsx', engine='openpyxl') as writer:
+                df_class = calc_TUV_grade(df_TUV)
+                df_class.to_excel(writer,
+                                  sheet_name='Classifications', index=False)
+                df_TUV.to_excel(writer,
+                                sheet_name='Scores', index=False)
         if save_detailed:
             save_pickle(d_p_fn, detailed_dict)
     print('Time elapsed: ' + str(time.time() - t0) + ' s')
     return dfCases
+
+
+def calc_TUV_grade(df_TUV):
+    """
+    Calculate the TUV grades based on the Total TUV scores.
+
+    Parameters
+    ----------
+    AL : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    df_class = df_TUV.groupby(['Plot Label'], as_index=False).sum()
+    df_class = df_class[['Plot Label', 'TUV Score']]
+    df_class['TUV Class'] = np.where(df_class['TUV Score'] >= 16, 'A+',
+                                     np.where(df_class['TUV Score'] >= 11, 'A',
+                                     np.where(df_class['TUV Score'] >= 6, 'B',
+                                              'C')))
+    return df_class
 
 
 def calc_TUV_class(AL):
@@ -351,52 +421,61 @@ def calc_TUV_class(AL):
         TUV class for each shade type.
 
     """
-    Class_TUV = ['NA']*5
+    Class_TUV = [0]*6
     # Split ALs
-    AL_long = AL[1]
-    AL_short = AL[2]
-    AL_spot = AL[3]
-    AL_diagonal = AL[4]
-    # Unshaded Class
-    Class_TUV[0] = 'NA'
+    AL_long = max(AL[1], AL[2])
+    AL_short = max(AL[3], AL[4])
+    AL_spot1 = AL[5]
+    AL_spot2 = AL[6]
+    AL_diagonal = AL[7]
+    AL_out = [0, AL_long, AL_short, AL_spot1, AL_spot2, AL_diagonal]
     # Long edge
-    if AL_long <= 10.:
-        Class_TUV[1] = 'A+'
-    elif AL_long > 10. and AL_long <= 30.:
-        Class_TUV[1] = 'A'
+    if AL_long <= 20.:
+        Class_TUV[1] = 4
+    elif AL_long > 20. and AL_long <= 30.:
+        Class_TUV[1] = 3
     elif AL_long > 30. and AL_long <= 50.:
-        Class_TUV[1] = 'B'
+        Class_TUV[1] = 2
     elif AL_long > 50.:
-        Class_TUV[1] = 'C'
+        Class_TUV[1] = 1
     # Short edge
     if AL_short <= 25.:
-        Class_TUV[2] = 'A+'
+        Class_TUV[2] = 4
     elif AL_short > 25. and AL_short <= 50.:
-        Class_TUV[2] = 'A'
-    elif AL_short > 50. and AL_short <= 85.:
-        Class_TUV[2] = 'B'
-    elif AL_short > 85.:
-        Class_TUV[2] = 'C'
+        Class_TUV[2] = 3
+    elif AL_short > 50. and AL_short <= 75.:
+        Class_TUV[2] = 2
+    elif AL_short > 75.:
+        Class_TUV[2] = 1
     # Spot
-    if AL_spot <= 10.:
-        Class_TUV[3] = 'A+'
-    elif AL_spot > 10. and AL_spot <= 20.:
-        Class_TUV[3] = 'A'
-    elif AL_spot > 20. and AL_spot <= 40.:
-        Class_TUV[3] = 'B'
-    elif AL_spot > 40.:
-        Class_TUV[3] = 'C'
+    if AL_spot1 <= 10.:
+        Class_TUV[3] = 4
+    elif AL_spot1 > 10. and AL_spot1 <= 20.:
+        Class_TUV[3] = 3
+    elif AL_spot1 > 20. and AL_spot1 <= 30.:
+        Class_TUV[3] = 2
+    elif AL_spot1 > 30.:
+        Class_TUV[3] = 1
+    # Multi-Spot
+    if AL_spot2 <= 20.:
+        Class_TUV[4] = 4
+    elif AL_spot2 > 20. and AL_spot2 <= 25.:
+        Class_TUV[4] = 3
+    elif AL_spot2 > 25. and AL_spot2 <= 35.:
+        Class_TUV[4] = 2
+    elif AL_spot2 > 35.:
+        Class_TUV[4] = 1
     # Diagonal
     if AL_diagonal <= 30.:
-        Class_TUV[4] = 'A+'
+        Class_TUV[5] = 4
     elif AL_diagonal > 30. and AL_diagonal <= 60.:
-        Class_TUV[4] = 'A'
+        Class_TUV[5] = 3
     elif AL_diagonal > 60. and AL_diagonal <= 80.:
-        Class_TUV[4] = 'B'
+        Class_TUV[5] = 2
     elif AL_diagonal > 80.:
-        Class_TUV[4] = 'C'
+        Class_TUV[5] = 1
 
-    return Class_TUV
+    return Class_TUV, AL_out
 
 
 def gen_modDBs_struct(cell_name, mod_name, NPTS, NPTS_cell,

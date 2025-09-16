@@ -128,6 +128,8 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                                            [scen]][0])
                                 shd_cell_idx = ast.literal_eval(
                                     sub_df.loc['shade_cell_idx', [scen]][0])
+                                cell_stype = ast.literal_eval(
+                                    sub_df.loc['rowcol_type', [scen]][0])
                                 translucence = float(
                                     sub_df.loc['translucence', [scen]][0])
                                 dir_diff_ratio = float(
@@ -136,6 +138,7 @@ def gen_shade_scenarios(mods_sys_dict, pvshade_params, search_idx_name,
                                 df_shd_sce = shade_ncells(maxsys_dict,
                                                           df_shd_sce,
                                                           num_cells,
+                                                          cell_stype=cell_stype,
                                                           shd_cell_idx_lst=shd_cell_idx,
                                                           translucence=translucence,
                                                           dir_diff_ratio=dir_diff_ratio)
@@ -846,7 +849,7 @@ def shade_1cell(maxsys_dict, df_shd_sce,
     return df_shd_sce
 
 
-def gen_cells_shd_list(maxsys_dict, num_cells):
+def gen_cells_shd_list(maxsys_dict, num_cells, cell_stype=[]):
     """
     Generate random cell indices but with some order.
 
@@ -869,16 +872,26 @@ def gen_cells_shd_list(maxsys_dict, num_cells):
     num_diodes = len(cell_pos)
     num_par = len(cell_pos[0])
     tot_1cell = num_diodes * num_par
-    diode_list = list(range(num_diodes))
-    par_list = list(range(num_par))
-    diode_var1 = list(itertools.repeat(diode_list, num_par))
+    if len(cell_stype) == 0:
+        diode_list = list(range(num_diodes))
+        par_list = list(range(num_par))
+    else:
+        if num_diodes <= 2:
+            diode_list = list(range(num_diodes))
+        else:
+            diode_list = list(range(2))
+        if num_par <= 2 or num_diodes <= 1:
+            par_list = list(range(num_par))
+        else:
+            par_list = list(range(2))
+    diode_var1 = list(itertools.repeat(diode_list, len(par_list)))
     diode_var = []
     for dv1 in diode_var1:
         for dv2 in dv1:
             diode_var.append(dv2)
     par_var1 = []
     rev_p = False
-    for idx_p in range(num_diodes):
+    for idx_p in range(len(diode_list)):
         if rev_p:
             par_var1.append(list(reversed(par_list)))
         else:
@@ -961,7 +974,7 @@ def remove_old_cells(shd_cell_list, idx_list):
 
 def shade_ncells(maxsys_dict, df_shd_sce, num_cells=2, shd_cell_idx_lst=[],
                  translucence=1,
-                 dir_diff_ratio=1):
+                 dir_diff_ratio=1, cell_stype=[]):
     """
     Generate full shading of n number of cells.
 
@@ -989,7 +1002,7 @@ def shade_ncells(maxsys_dict, df_shd_sce, num_cells=2, shd_cell_idx_lst=[],
     # Extract cell dimensions
     cell_coords = maxsys_dict['Physical_Info']['Cell_Coordinates']
     full_poly = []
-    shd_cell_list = gen_cells_shd_list(maxsys_dict, num_cells)
+    shd_cell_list = gen_cells_shd_list(maxsys_dict, num_cells, cell_stype)
     for idx_cell in range(num_cells):
         if shd_cell_idx_lst == []:
             # Random cell index

@@ -155,10 +155,15 @@ def plot_shade_module(maxsys_dict, df_shd_sce,
                 sx, sy = full_poly.exterior.xy
                 plt.fill(sx, sy, 'r')
             elif full_poly.type == 'MultiPolygon':
-                full_poly = list(full_poly)
-                for shd_poly in full_poly:
-                    sx, sy = shd_poly.exterior.xy
-                    plt.fill(sx, sy, 'r')
+                try:
+                    full_poly = list(full_poly)
+                    for shd_poly in full_poly:
+                        sx, sy = shd_poly.exterior.xy
+                        plt.fill(sx, sy, 'r')
+                except TypeError:
+                    for shd_poly in full_poly.geoms:
+                        sx, sy = shd_poly.exterior.xy
+                        plt.fill(sx, sy, 'r')
             plt.xlim([-10, maxp + 50])
             plt.ylim([-10, maxp + 50])
             plt.title(title_str, fontsize=10)
