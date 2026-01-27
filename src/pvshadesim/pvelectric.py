@@ -13,7 +13,7 @@ import numpy as np
 from v_pvmismatch import vpvsystem, vpvcell, vpvmodule, vpvstring, cell_curr
 from v_pvmismatch.utils import round_to_dec
 
-from .utils import save_pickle
+from .utils import save_pickle, delete_files_with_substrings
 
 warnings.filterwarnings("ignore")
 db_path = os.path.join(Path(__file__).parent, 'db')
@@ -33,9 +33,8 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                               excel_fn="PVMM_Vectorized_Shade_Simulation_Results.xlsx",
                               d_p_fn='Detailed_Data.pickle',
                               run_cellcurr=True,
-                              c_p_fn='Cell_current.pickle', Ee_round=2,
-                              IV_DB_loc=IV_DB_loc, IV_res=0.02,
-                              IV_trk_ct=True):
+                              c_p_fn='Cell_current.pickle', Ee_round=4,
+                              run_isc=False):
     """
     Run vectorized PVMismatch for all modules, and shade scenarios in sim.
 
@@ -84,6 +83,9 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
         Dataframe containing summarized results.
 
     """
+    data_path = os.path.join(os.getcwd(), 'VPVMM_data')
+    if os.path.isdir(data_path) is not True:
+        os.makedirs(data_path)
     t0 = time.time()
     if pickle_fn is not None:
         # Create Empty dataframe to store results
@@ -169,25 +171,22 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                             maxmod = maxsys_dict['Electrical_Circuit']['PV_Module']
                             cell_type = maxsys_dict['Physical_Info']['Cell_type']
 
-                            if IV_DB_loc:
-                                Ee_arr_np = round_to_dec(Ee_arr_np,
-                                                         IV_res).round(
-                                                             Ee_round)
                             # Generate Ee & Tcell array for simulation
                             Ee_vec, Tcell_vec = vpvsystem.gen_sys_Ee_Tcell_array(
                                 Ee_shdarr_np.shape[0], num_str, str_len,
                                 idx_map.shape[0], idx_map.shape[1],
                                 Ee_arr_np, Tcell)
-                            # Get unique Ee at cell level
-                            Ee_cell, u_cell_type, _ = vpvsystem.get_unique_Ee(
-                                Ee_vec, search_type='cell',
-                                cell_type=cell_type)
-                            # Get unique Ee at module level
-                            Ee_mod, _, _ = vpvsystem.get_unique_Ee(
-                                Ee_vec, search_type='module')
+                            # Get unique (Ee, Tcell) at cell level
+                            Ee_cell, Tcell_cell, u_cell_type, _ = vpvsystem.get_unique_Ee_Tcell(
+                                Ee_vec, Tcell_vec, search_type='cell', cell_type=cell_type
+                            )
+                            # Get unique (Ee, Tcell) at module level
+                            Ee_mod, Tcell_mod, _, cts_mod = vpvsystem.get_unique_Ee_Tcell(
+                                Ee_vec, Tcell_vec, search_type='module'
+                            )
                             # Get unique Ee at string level
-                            Ee_str, _, _ = vpvsystem.get_unique_Ee(
-                                Ee_vec, search_type='string')
+                            Ee_str, Tcell_str, _, _ = vpvsystem.get_unique_Ee_Tcell(
+                                Ee_vec, Tcell_vec, search_type='string')
                             # CELL #
                             # Extract cell prms
                             u_ctype = np.unique(cell_type)
@@ -198,74 +197,88 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                                 pvc = copy.deepcopy(
                                     maxsys_dict['Electrical_Circuit']['PV_Module'].pvcells[i_map])
                                 pvcs.append(pvc)
-                            # Define cell database names
-                            if IV_DB_loc:
-                                cell_DBs = [IV_res]
-                            else:
-                                cell_DBs = None
                             # Run 2 diode model on unique Ee
-                            cell_data = vpvcell.two_diode_model(
-                                pvcs, Ee_cell, u_cell_type,
-                                Tcell*np.ones(Ee_cell.shape), NPTS=NPTS,
-                                NPTS_cell=NPTS_cell,
+                            cfname_pre = '_'.join([plot_label, 'cell_data'])
+                            vpvcell.two_diode_model(
+                                pvcs, Ee_cell, u_cell_type, Tcell_cell,
+                                NPTS=NPTS, NPTS_cell=NPTS_cell,
                                 use_cell_NPT=use_cell_NPT,
-                                cell_DBs=cell_DBs, Ee_round=Ee_round)
-                            NPT_dict = cell_data['NPT']
+                                fname_pre=cfname_pre, res_path=data_path)
                             # MODULE #
-                            # Pre-generated
-                            # Define module database names
-                            mod_DBs = gen_modDBs_struct(cell_name, mod_name,
-                                                        NPTS, NPTS_cell,
-                                                        IV_DB_loc, IV_res)
-                            # Define substring database names
-                            ss_DBs = gen_SSDBs_struct(cell_name, mod_name,
-                                                      NPTS, NPTS_cell,
-                                                      IV_DB_loc, IV_res)
                             if is_sub_Mod:
-                                mod_data = vpvmodule.calcsubMods(
+                                mfname_pre = '_'.join([plot_label,
+                                                       'submod_data'])
+                                NPT_dict = vpvmodule.calcsubMods(
                                     cell_pos, maxmod, idx_map,
-                                    Ee_mod, Ee_cell,
-                                    u_cell_type, cell_type,
-                                    cell_data)
+                                    Ee_mod, Tcell_mod, Ee_cell, u_cell_type,
+                                    Tcell_cell, cell_type,
+                                    cfname_pre=cfname_pre, res_path=data_path,
+                                    mfname_pre=mfname_pre)
                             else:
-                                mod_data = vpvmodule.calcMods(
-                                    cell_pos, maxmod, idx_map, Ee_mod, Ee_cell,
-                                    u_cell_type, cell_type,
-                                    cell_data, outer_circuit,
-                                    run_cellcurr=run_cellcurr, mod_DBs=mod_DBs,
-                                    ss_DBs=ss_DBs, Ee_round=Ee_round,
-                                    IV_trk_ct=IV_trk_ct)
+                                mfname_pre = '_'.join([plot_label,
+                                                       'mod_data'])
+                                NPT_dict = vpvmodule.calcMods(
+                                    cell_pos, maxmod, idx_map,
+                                    Ee_mod, Tcell_mod, Ee_cell, Tcell_cell,
+                                    u_cell_type, cell_type, outer_circuit,
+                                    run_bpact=True,
+                                    run_cellcurr=run_cellcurr,
+                                    cfname_pre=cfname_pre,
+                                    res_path=data_path, mfname_pre=mfname_pre)
+                            sfname_pre = '_'.join([plot_label, 'sys_data'])
                             if is_AC_Mod:
                                 # AC SYSTEM #
                                 sys_data = vpvsystem.calcACSystem(
-                                    Ee_vec, Ee_mod, mod_data, NPT_dict,
-                                    run_cellcurr=run_cellcurr)
+                                    Ee_vec, Tcell_vec,
+                                    Ee_mod, Tcell_mod, NPT_dict,
+                                    run_cellcurr=run_cellcurr,
+                                    mfname_pre=mfname_pre,
+                                    res_path=data_path, sfname_pre=sfname_pre)
                                 if run_cellcurr:
                                     ccmod = cell_curr.est_cell_current_AC(
-                                        sys_data, idx_map)
+                                        idx_map, res_path=data_path,
+                                        sfname_pre=sfname_pre)
                             else:
                                 if is_sub_Mod:
                                     # SUB MODULE MPPT ###
                                     sys_data = vpvsystem.calcsubModuleSystem(
                                         Ee_vec, Ee_mod,
-                                        mod_data, NPT_dict,
+                                        NPT_dict,
                                         run_bpact=False,
                                         run_annual=False,
-                                        save_bpact_freq=False)
+                                        save_bpact_freq=False,
+                                        round_decimals=Ee_round,
+                                        mfname_pre=mfname_pre,
+                                        res_path=data_path,
+                                        sfname_pre=sfname_pre)
                                 else:
                                     # DC #
                                     # STRING #
-                                    str_data = vpvstring.calcStrings(
-                                        Ee_str, Ee_mod, mod_data, NPT_dict,
-                                        run_cellcurr=run_cellcurr)
+                                    stfname_pre = '_'.join([plot_label,
+                                                            'str_data'])
+                                    vpvstring.calcStrings(
+                                        Ee_str, Tcell_str, Ee_mod, Tcell_mod,
+                                        NPT_dict,
+                                        run_cellcurr=run_cellcurr,
+                                        mfname_pre=mfname_pre,
+                                        res_path=data_path,
+                                        stfname_pre=stfname_pre)
                                     # SYSTEM #
                                     sys_data = vpvsystem.calcSystem(
-                                        Ee_vec, Ee_str, str_data, NPT_dict,
-                                        run_cellcurr=run_cellcurr)
+                                        Ee_vec, Tcell_vec,
+                                        Ee_str, Tcell_str, NPT_dict,
+                                        run_cellcurr=run_cellcurr,
+                                        stfname_pre=stfname_pre,
+                                        res_path=data_path,
+                                        sfname_pre=sfname_pre)
                                     if run_cellcurr:
                                         ccmod = cell_curr.est_cell_current_DC(
-                                            sys_data, str_data, mod_data,
-                                            idx_map)
+                                            sys_data,
+                                            res_path=data_path,
+                                            sfname_pre=sfname_pre,
+                                            stfname_pre=stfname_pre,
+                                            mfname_pre=mfname_pre,
+                                            cell_index=idx_map)
 
                             dfSubCases['Pmp [W]'] = sys_data['Pmp'].tolist()
                             dfSubCases['Vmp [V]'] = sys_data['Vmp'].tolist()
@@ -281,8 +294,9 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                             if run_cellcurr:
                                 dfSubCases['ncells_Rev_mpp'] = np.sum(ccmod['cell_isRev_mp'],
                                                                       axis=(1, 2, 3, 4)).tolist()
-                                dfSubCases['ncells_Rev_isc'] = np.sum(ccmod['cell_isRev_sc'],
-                                                                      axis=(1, 2, 3, 4)).tolist()
+                                if run_isc:
+                                    dfSubCases['ncells_Rev_isc'] = np.sum(ccmod['cell_isRev_sc'],
+                                                                          axis=(1, 2, 3, 4)).tolist()
                             pmp0 = sys_data['Pmp'][0]
                             dfSubCases['Power change [%]'] = 100 * \
                                 (dfSubCases['Pmp [W]']/pmp0 - 1)
@@ -343,10 +357,6 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                                 # Save IV Data
                                 detailed_dict[plot_label]['IV'] = {}
                                 detailed_dict[plot_label]['IV']['Sim'] = sys_data
-                                if not is_AC_Mod:
-                                    detailed_dict[plot_label]['IV']['String'] = str_data
-                                detailed_dict[plot_label]['IV']['Module'] = mod_data
-                                detailed_dict[plot_label]['IV']['Cell'] = cell_data
                                 # Save other information
                                 detailed_dict[plot_label]['Other'] = {}
                                 detailed_dict[plot_label]['Other']['Cell_Index'] = maxsys_dict['Physical_Info']['Index_Map']
@@ -361,6 +371,13 @@ def gen_pvmmvec_shade_results(mods_sys_dict,
                                 cc_mod[plot_label] = copy.deepcopy(ccmod)
                                 save_pickle('_'.join([plot_label, c_p_fn]),
                                             cc_mod)
+                        # Delete all IV data
+                        delete_files_with_substrings(folder_path=data_path,
+                                                     substrings=[cfname_pre,
+                                                                 mfname_pre,
+                                                                 stfname_pre,
+                                                                 sfname_pre],
+                                                     extension='.pickle')
                         print('Time elapsed to run ' + plot_label +
                               ': ' + str(time.time() - t1) + ' s')
 
@@ -476,223 +493,3 @@ def calc_TUV_class(AL):
         Class_TUV[5] = 1
 
     return Class_TUV, AL_out
-
-
-def gen_modDBs_struct(cell_name, mod_name, NPTS, NPTS_cell,
-                      IV_DB_loc, IV_res):
-    """
-    Generate module database struct.
-
-    Parameters
-    ----------
-    cell_name : TYPE
-        DESCRIPTION.
-    mod_name : TYPE
-        DESCRIPTION.
-    NPTS : TYPE
-        DESCRIPTION.
-    NPTS_cell : TYPE
-        DESCRIPTION.
-    IV_DB_loc : TYPE
-        DESCRIPTION.
-    IV_res : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    mod_DBs : TYPE
-        DESCRIPTION.
-
-    """
-    if IV_DB_loc:
-        mod_irr_db_name = '_'.join(['pvmodule', 'Irr',
-                                    mod_name, cell_name, 'NPTS',
-                                    str(NPTS),
-                                    'NPTS_cell',
-                                    str(NPTS_cell)]
-                                   ) + '.pickle'
-        mod_isc_db_name = '_'.join(['pvmodule', 'Isc',
-                                    mod_name, cell_name, 'NPTS',
-                                    str(NPTS),
-                                    'NPTS_cell',
-                                    str(NPTS_cell)]
-                                   ) + '.pickle'
-        mod_I_db_name = '_'.join(['pvmodule', 'I',
-                                  mod_name, cell_name, 'NPTS',
-                                  str(NPTS),
-                                  'NPTS_cell',
-                                  str(NPTS_cell)]
-                                 ) + '.pickle'
-        mod_V_db_name = '_'.join(['pvmodule', 'V',
-                                  mod_name, cell_name, 'NPTS',
-                                  str(NPTS),
-                                  'NPTS_cell',
-                                  str(NPTS_cell)]
-                                 ) + '.pickle'
-        mod_Isubstr_db_name = '_'.join(['pvmodule',
-                                        'Isubstr',
-                                        mod_name, cell_name, 'NPTS',
-                                        str(NPTS),
-                                        'NPTS_cell',
-                                        str(NPTS_cell)]
-                                       ) + '.pickle'
-        mod_Vsubstr_db_name = '_'.join(['pvmodule',
-                                        'Vsubstr',
-                                        mod_name, cell_name, 'NPTS',
-                                        str(NPTS),
-                                        'NPTS_cell',
-                                        str(NPTS_cell)]
-                                       ) + '.pickle'
-        mod_Isubstr_pbp_db_name = '_'.join(['pvmodule',
-                                            'Isubstr_pbp',
-                                            mod_name, cell_name,
-                                            'NPTS',
-                                            str(NPTS),
-                                            'NPTS_cell',
-                                            str(NPTS_cell)
-                                            ]) + '.pickle'
-        mod_Vsubstr_pbp_db_name = '_'.join(['pvmodule',
-                                            'Vsubstr_pbp',
-                                            mod_name, cell_name,
-                                            'NPTS',
-                                            str(NPTS),
-                                            'NPTS_cell',
-                                            str(NPTS_cell)
-                                            ]) + '.pickle'
-        mod_bypassed_db_name = '_'.join(['pvmodule',
-                                         'bypassed',
-                                         mod_name, cell_name,
-                                         'NPTS',
-                                         str(NPTS),
-                                         'NPTS_cell',
-                                         str(NPTS_cell)]
-                                        ) + '.pickle'
-        mod_counts_db_name = '_'.join(['pvmodule',
-                                       'counts',
-                                       mod_name, cell_name,
-                                       'NPTS',
-                                       str(NPTS),
-                                       'NPTS_cell',
-                                       str(NPTS_cell)]
-                                      ) + '.pickle'
-        mod_DBs = [os.path.join(IV_DB_loc,
-                                mod_irr_db_name),
-                   os.path.join(IV_DB_loc,
-                                mod_isc_db_name),
-                   os.path.join(IV_DB_loc,
-                                mod_I_db_name),
-                   os.path.join(IV_DB_loc,
-                                mod_V_db_name),
-                   os.path.join(IV_DB_loc,
-                                mod_Isubstr_db_name),
-                   os.path.join(IV_DB_loc,
-                                mod_Vsubstr_db_name),
-                   os.path.join(IV_DB_loc,
-                                mod_Isubstr_pbp_db_name),
-                   os.path.join(IV_DB_loc,
-                                mod_Vsubstr_pbp_db_name),
-                   os.path.join(IV_DB_loc,
-                                mod_bypassed_db_name),
-                   os.path.join(IV_DB_loc,
-                                mod_counts_db_name),
-                   IV_res]
-    else:
-        mod_DBs = None
-    return mod_DBs
-
-
-def gen_SSDBs_struct(cell_name, mod_name, NPTS, NPTS_cell,
-                     IV_DB_loc, IV_res):
-    """
-    Generate module substring database struct.
-
-    Parameters
-    ----------
-    cell_name : TYPE
-        DESCRIPTION.
-    mod_name : TYPE
-        DESCRIPTION.
-    NPTS : TYPE
-        DESCRIPTION.
-    NPTS_cell : TYPE
-        DESCRIPTION.
-    IV_DB_loc : TYPE
-        DESCRIPTION.
-    IV_res : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    mod_DBs : TYPE
-        DESCRIPTION.
-
-    """
-    if IV_DB_loc:
-        SS_irr_db_name = '_'.join(['pvsubstr', 'Irr',
-                                   mod_name, cell_name, 'NPTS',
-                                   str(NPTS),
-                                   'NPTS_cell',
-                                   str(NPTS_cell)]
-                                  ) + '.pickle'
-        SS_Id_pre_db_name = '_'.join(['pvsubstr', 'Id_pre',
-                                      mod_name, cell_name, 'NPTS',
-                                      str(NPTS),
-                                      'NPTS_cell',
-                                      str(NPTS_cell)]
-                                     ) + '.pickle'
-        SS_Vd_pre_db_name = '_'.join(['pvsubstr', 'Vd_pre',
-                                      mod_name, cell_name, 'NPTS',
-                                      str(NPTS),
-                                      'NPTS_cell',
-                                      str(NPTS_cell)]
-                                     ) + '.pickle'
-        SS_cts_pre_db_name = '_'.join(['pvsubstr', 'counts',
-                                      mod_name, cell_name, 'NPTS',
-                                      str(NPTS),
-                                      'NPTS_cell',
-                                       str(NPTS_cell)]
-                                      ) + '.pickle'
-        SS_irr_ss_db_name = '_'.join(['pvsubstr', 'Irr_ss',
-                                      mod_name, cell_name, 'NPTS',
-                                      str(NPTS),
-                                      'NPTS_cell',
-                                      str(NPTS_cell)]
-                                     ) + '.pickle'
-        SS_Iss_pre_db_name = '_'.join(['pvsubstr', 'Iss',
-                                       mod_name, cell_name, 'NPTS',
-                                       str(NPTS),
-                                       'NPTS_cell',
-                                       str(NPTS_cell)]
-                                      ) + '.pickle'
-        SS_Vss_pre_db_name = '_'.join(['pvsubstr', 'Vss',
-                                       mod_name, cell_name, 'NPTS',
-                                       str(NPTS),
-                                       'NPTS_cell',
-                                       str(NPTS_cell)]
-                                      ) + '.pickle'
-        SS_cts_ss_db_name = '_'.join(['pvsubstr', 'counts_ss',
-                                      mod_name, cell_name, 'NPTS',
-                                      str(NPTS),
-                                      'NPTS_cell',
-                                      str(NPTS_cell)]
-                                     ) + '.pickle'
-        SS_DBs = [os.path.join(IV_DB_loc,
-                               SS_irr_db_name),
-                  os.path.join(IV_DB_loc,
-                               SS_Id_pre_db_name),
-                  os.path.join(IV_DB_loc,
-                               SS_Vd_pre_db_name),
-                  os.path.join(IV_DB_loc,
-                               SS_cts_pre_db_name),
-                  os.path.join(IV_DB_loc,
-                               SS_irr_ss_db_name),
-                  os.path.join(IV_DB_loc,
-                               SS_Iss_pre_db_name),
-                  os.path.join(IV_DB_loc,
-                               SS_Vss_pre_db_name),
-                  os.path.join(IV_DB_loc,
-                               SS_cts_ss_db_name),
-                  IV_res]
-    else:
-        SS_DBs = None
-    return SS_DBs
