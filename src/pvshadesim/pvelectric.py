@@ -11,9 +11,9 @@ import pandas as pd
 import numpy as np
 
 from v_pvmismatch import vpvsystem, vpvcell, vpvmodule, vpvstring, cell_curr
-from v_pvmismatch.utils import round_to_dec
+from v_pvmismatch.utils import delete_files_with_substrings
 
-from .utils import save_pickle, delete_files_with_substrings
+from .utils import save_pickle
 
 warnings.filterwarnings("ignore")
 db_path = os.path.join(Path(__file__).parent, 'db')
